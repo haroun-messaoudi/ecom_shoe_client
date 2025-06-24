@@ -12,6 +12,10 @@ export default defineConfig({
     vueDevTools(),
     tailwindcss()
   ],
+  server: {
+    historyApiFallback: true, // ✅ This is the key line!
+  }
+  ,
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))
