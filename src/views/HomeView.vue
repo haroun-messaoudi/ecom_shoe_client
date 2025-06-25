@@ -9,12 +9,12 @@ const router = useRouter()
 const searchStore = useSearchStore()
 const productStore = useProductStore()
 
-const categories = ref([{ id: 0, name: 'All' }])
+const categories = ref([])
 const activeCategoryId = ref(0)
 
-const recommended = computed(() => productStore.topOrdered.slice(0, 4)) // Most ordered
-const discounted = computed(() => productStore.discounted.slice(0, 4))  // Sales
-const newProducts = computed(() => productStore.newProducts.slice(0, 4)) // New
+const recommended = computed(() => productStore.topOrdered.slice(0, 4))
+const discounted = computed(() => productStore.discounted.slice(0, 4))
+const newProducts = computed(() => productStore.newProducts.slice(0, 4))
 
 const loadingRecommended = computed(() => productStore.loadingTopOrdered)
 const loadingDiscounted = computed(() => productStore.loadingDiscounted)
@@ -26,26 +26,24 @@ function goToCategory(cat) {
   router.push({ name: 'products', query: { category: cat.id || '' } })
 }
 
-
 onMounted(async () => {
   await searchStore.fetchCategories()
-  categories.value = [{ id: 0, name: 'All' }, ...searchStore.categories]
-
+  categories.value = searchStore.categories
   productStore.fetchTopOrdered()
   productStore.fetchDiscounted()
   productStore.fetchNewProducts()
 })
 </script>
+
 <template>
   <div>
-    <!-- Full-width Hero -->
+    <!-- Hero Section -->
     <section class="relative h-[500px] overflow-hidden flex items-center justify-center text-center mb-10">
       <div
         class="absolute inset-0 bg-cover bg-center"
         :style="{ backgroundImage: 'url(/hero.jpeg)' }"
       ></div>
       <div class="absolute inset-0 bg-black/50"></div>
-
       <div class="relative z-10 text-white space-y-4 px-4">
         <h1 class="text-4xl md:text-5xl font-extrabold">Fuel Your Gains</h1>
         <p class="text-lg max-w-xl mx-auto drop-shadow-md">
@@ -59,25 +57,49 @@ onMounted(async () => {
         </button>
       </div>
     </section>
+    <!-- Category Image Carousel -->
+    <section class="w-full px-4 mb-12">
+      <h2 class="text-xl font-semibold mb-4 text-center">Shop by Category</h2>
+      <div class="flex gap-4 overflow-x-auto no-scrollbar pb-2">
+        <div
+          v-for="cat in categories"
+          :key="cat.id"
+          class="min-w-[140px] flex-shrink-0 text-center"
+        >
+          <!-- Image or Fallback (click triggers goToCategory) -->
+          <div
+            class="relative w-full h-28 rounded-lg overflow-hidden cursor-pointer group"
+            @click="goToCategory(cat)"
+          >
+            <!-- If category has an image -->
+            <img
+              v-if="cat.image"
+              :src="cat.image"
+              :alt="cat.name"
+              class="w-full h-full object-cover transition-transform group-hover:scale-105"
+            />
+            <!-- Fallback background -->
+            <div
+              v-else
+              class="w-full h-full bg-orange-100 flex items-center justify-center text-orange-700"
+            >
+              {{ cat.name }}
+            </div>
+
+            <!-- Text overlay -->
+            <div
+              class="absolute inset-0 bg-black/40 flex items-center justify-center text-white font-semibold text-sm"
+            >
+              {{ cat.name }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
 
     <!-- Main Content -->
     <main class="px-6 py-12 space-y-20">
-      <!-- Category Filter -->
-      <div class="flex flex-wrap justify-center gap-3 mt-4 px-4">
-        <button
-          v-for="cat in categories"
-          :key="cat.id"
-          @click="goToCategory(cat)"
-          class="px-4 py-2 rounded-full border text-sm font-medium transition duration-200 min-w-[100px] text-center"
-          :class="{
-            'bg-orange-500 text-white border-orange-500 shadow-md': cat.id === activeCategoryId,
-            'bg-white text-gray-700 border-orange-300 hover:bg-orange-100 active:bg-orange-200': cat.id !== activeCategoryId
-          }"
-        >
-          {{ cat.name }}
-        </button>
-      </div>
-
       <!-- Product Sections -->
       <section id="productSections" class="space-y-16">
         <ProductList title="Recommended for You" :products="recommended" :loading="loadingRecommended" />
@@ -94,3 +116,13 @@ onMounted(async () => {
     </main>
   </div>
 </template>
+
+<style scoped>
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+</style>

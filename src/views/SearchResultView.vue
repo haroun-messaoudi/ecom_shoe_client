@@ -11,7 +11,7 @@ const searchStore = useSearchStore()
 const categoryId = ref(route.query.category ? Number(route.query.category) : null)
 
 const categories = computed(() => [
-  { id: 0, name: 'All' },
+  { id: 0, name: 'All', image: null },
   ...searchStore.categories
 ])
 
@@ -34,8 +34,6 @@ watch(
     searchStore.setSearchTerm(q.search || '')
     searchStore.setCategory(q.category ? Number(q.category) : null)
     categoryId.value = q.category ? Number(q.category) : null
-
-    // ✅ Always fetch products, even if no filters are applied
     await searchStore.searchProducts()
   },
   { immediate: true }
@@ -43,41 +41,81 @@ watch(
 
 onMounted(async () => {
   await searchStore.fetchCategories()
-  // initial product fetch handled by watcher
 })
 </script>
 
 <template>
   <div class="px-6 py-8 space-y-8">
-    <!-- Category Filter Bar -->
-    <div class="flex flex-wrap justify-center gap-3 px-2">
-      <button
-        v-for="cat in categories"
-        :key="cat.id"
-        @click="goToCategory(cat)"
-        class="px-4 py-2 rounded-full border text-sm font-medium transition duration-200 min-w-[100px] text-center"
-        :class="{
-          'bg-orange-500 text-white border-orange-500 shadow-md': cat.id === categoryId,
-          'bg-white text-gray-700 border-orange-300 hover:bg-orange-100 active:bg-orange-200': cat.id !== categoryId
-        }"
-      >
-        {{ cat.name }}
-      </button>
+    <!-- Category Image Carousel -->
+    <div class="mb-6">
+      <div class="flex gap-4 overflow-x-auto no-scrollbar pb-1">
+        <div
+          v-for="cat in categories"
+          :key="cat.id"
+          class="min-w-[120px] flex-shrink-0"
+        >
+          <div
+            class="relative w-full h-24 rounded-lg overflow-hidden cursor-pointer group border-2 transition"
+            :class="{
+              'border-orange-500 shadow-md': cat.id === categoryId,
+              'border-transparent': cat.id !== categoryId
+            }"
+            @click="goToCategory(cat)"
+          >
+            <img
+              v-if="cat.image"
+              :src="cat.image"
+              :alt="cat.name"
+              class="w-full h-full object-cover transition-transform group-hover:scale-105"
+            />
+            <div
+              v-else
+              class="w-full h-full bg-orange-100 flex items-center justify-center text-orange-700 font-semibold text-sm"
+            >
+              {{ cat.name }}
+            </div>
+            <div
+              class="absolute inset-0 bg-black/40 flex items-center justify-center text-white font-semibold text-sm"
+            >
+              {{ cat.name }}
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <!-- Results -->
-    <div v-if="searchStore.loading" class="flex flex-col items-center justify-center py-20 text-gray-600 space-y-4">
-      <svg class="animate-spin h-8 w-8 text-orange-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-        <path class="opacity-75" fill="currentColor"
-              d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"/>
+    <!-- Loading Spinner -->
+    <div
+      v-if="searchStore.loading"
+      class="flex flex-col items-center justify-center py-20 text-gray-600 space-y-4"
+    >
+      <svg
+        class="animate-spin h-8 w-8 text-orange-600"
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+      >
+        <circle
+          class="opacity-25"
+          cx="12"
+          cy="12"
+          r="10"
+          stroke="currentColor"
+          stroke-width="4"
+        />
+        <path
+          class="opacity-75"
+          fill="currentColor"
+          d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+        />
       </svg>
       <p class="text-lg font-medium">Searching...</p>
     </div>
 
+    <!-- Product Results -->
     <ProductGrid
       v-else
-      :title="[ 
+      :title="[
         'Results',
         currentCategoryName ? 'in ' + currentCategoryName : '',
         searchStore.searchTerm ? `for '${searchStore.searchTerm}'` : ''
@@ -88,3 +126,13 @@ onMounted(async () => {
     />
   </div>
 </template>
+
+<style scoped>
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+</style>
