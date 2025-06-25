@@ -26,6 +26,7 @@ function goToCategory(cat) {
   router.push({ name: 'products', query: { category: cat.id || '' } })
 }
 
+
 onMounted(async () => {
   await searchStore.fetchCategories()
   categories.value = [{ id: 0, name: 'All' }, ...searchStore.categories]
@@ -35,48 +36,61 @@ onMounted(async () => {
   productStore.fetchNewProducts()
 })
 </script>
-
 <template>
-  <main class="px-6 py-12 space-y-20">
-    <!-- Hero -->
-    <section class="text-center bg-gray-100 py-20 rounded-xl">
-      <h1 class="text-4xl md:text-5xl font-extrabold mb-6">Welcome to Your Store</h1>
-      <button
-        @click="$el.querySelector('#productSections')?.scrollIntoView({ behavior: 'smooth' })"
-        class="px-8 py-3 bg-orange-500 text-white rounded-full font-medium hover:scale-105 transition"
-      >
-        Shop Now
-      </button>
+  <div>
+    <!-- Full-width Hero -->
+    <section class="relative h-[500px] overflow-hidden flex items-center justify-center text-center mb-10">
+      <div
+        class="absolute inset-0 bg-cover bg-center"
+        :style="{ backgroundImage: 'url(/hero.jpeg)' }"
+      ></div>
+      <div class="absolute inset-0 bg-black/50"></div>
+
+      <div class="relative z-10 text-white space-y-4 px-4">
+        <h1 class="text-4xl md:text-5xl font-extrabold">Fuel Your Gains</h1>
+        <p class="text-lg max-w-xl mx-auto drop-shadow-md">
+          Discover protein powders, pre‑workouts, and recovery shakes.
+        </p>
+        <button
+          @click="$el.querySelector('#productSections')?.scrollIntoView({ behavior: 'smooth' })"
+          class="px-8 py-3 bg-[#FF6F00] text-white rounded-full font-medium hover:scale-105 transition"
+        >
+          Shop Now
+        </button>
+      </div>
     </section>
 
-    <!-- Category Filter -->
-    <div class="flex flex-wrap justify-center gap-3 mt-4 px-4">
-      <button
-        v-for="cat in categories"
-        :key="cat.id"
-        @click="goToCategory(cat)"
-        class="px-4 py-2 rounded-full border text-sm font-medium transition duration-200 min-w-[100px] text-center"
-        :class="{
-          'bg-orange-500 text-white border-orange-500 shadow-md': cat.id === activeCategoryId,
-          'bg-white text-gray-700 border-orange-300 hover:bg-orange-100 active:bg-orange-200': cat.id !== activeCategoryId
-        }"
-      >
-        {{ cat.name }}
-      </button>
-    </div>
+    <!-- Main Content -->
+    <main class="px-6 py-12 space-y-20">
+      <!-- Category Filter -->
+      <div class="flex flex-wrap justify-center gap-3 mt-4 px-4">
+        <button
+          v-for="cat in categories"
+          :key="cat.id"
+          @click="goToCategory(cat)"
+          class="px-4 py-2 rounded-full border text-sm font-medium transition duration-200 min-w-[100px] text-center"
+          :class="{
+            'bg-orange-500 text-white border-orange-500 shadow-md': cat.id === activeCategoryId,
+            'bg-white text-gray-700 border-orange-300 hover:bg-orange-100 active:bg-orange-200': cat.id !== activeCategoryId
+          }"
+        >
+          {{ cat.name }}
+        </button>
+      </div>
 
-    <!-- Product Sections -->
-    <section id="productSections" class="space-y-16">
-      <ProductList title="Recommended for You" :products="recommended" :loading="loadingRecommended" />
-      <ProductList title="Products on Sale" :products="discounted" :loading="loadingDiscounted" />
-      <ProductList title="New Arrivals" :products="newProducts" :loading="loadingNewProducts" />
-    </section>
+      <!-- Product Sections -->
+      <section id="productSections" class="space-y-16">
+        <ProductList title="Recommended for You" :products="recommended" :loading="loadingRecommended" />
+        <ProductList title="Products on Sale" :products="discounted" :loading="loadingDiscounted" />
+        <ProductList title="New Arrivals" :products="newProducts" :loading="loadingNewProducts" />
+      </section>
 
-    <!-- Footer -->
-    <footer class="text-center text-sm text-gray-500 space-x-6">
-      <router-link to="/about" class="hover:underline">About</router-link>
-      <router-link to="/contact" class="hover:underline">Contact</router-link>
-      <router-link to="/privacy" class="hover:underline">Privacy Policy</router-link>
-    </footer>
-  </main>
+      <!-- Footer -->
+      <footer class="text-center text-sm text-gray-500 space-x-6">
+        <router-link to="/about" class="hover:underline">About</router-link>
+        <router-link to="/contact" class="hover:underline">Contact</router-link>
+        <router-link to="/privacy" class="hover:underline">Privacy Policy</router-link>
+      </footer>
+    </main>
+  </div>
 </template>
