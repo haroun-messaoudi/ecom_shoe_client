@@ -142,11 +142,11 @@ watch(
       </section>
 
       <!-- Footer -->
-      <footer class="text-center text-sm text-gray-500 space-x-6">
+      <!-- <footer class="text-center text-sm text-gray-500 space-x-6">
         <router-link to="/about" class="hover:underline">About</router-link>
         <router-link to="/contact" class="hover:underline">Contact</router-link>
         <router-link to="/privacy" class="hover:underline">Privacy Policy</router-link>
-      </footer>
+      </footer> -->
     </main>
   </div>
 </template>
