@@ -15,6 +15,7 @@
     "@mdi/font": "^7.4.47",
     "@primevue/themes": "^4.3.5",
     "@tailwindcss/cli": "^4.1.10",
+    "@vueuse/motion": "^3.0.3",
     "axios": "^1.10.0",
     "pinia": "^3.0.1",
     "primeflex": "^4.0.0",

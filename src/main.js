@@ -11,6 +11,7 @@ import { ToastService } from 'primevue'
 import  ConfirmationService  from 'primevue/confirmationservice'
 import Toast         from 'primevue/toast'
 import ConfirmDialog from 'primevue/confirmdialog'
+import {MotionPlugin} from '@vueuse/motion'
 const app = createApp(App)
 
 
@@ -24,7 +25,7 @@ app.use(PrimeVue, {
 })
 app.use(ToastService)
 app.use(ConfirmationService)
-
+app.use(MotionPlugin) 
 app.component('Toast', Toast)
 app.component('ConfirmDialog', ConfirmDialog)
 app.mount('#app')
