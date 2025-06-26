@@ -41,15 +41,14 @@ const scrollRight = () => {
 
     <!-- Mobile Grid -->
     <div class="md:hidden grid grid-cols-2 gap-4 px-4 max-w-screen-xl mx-auto pb-6">
-      <component
+      <RouterLink
         v-for="(product, index) in products"
         :key="index"
-        :is="product.stock > 0 ? RouterLink : 'div'"
-        :to="product.stock > 0 ? { name: 'productDetail', params: { id: product.id } } : undefined"
+        :to="{ name: 'productDetail', params: { id: product.id } }"
         class="block"
       >
         <ProductCard :product="product" />
-      </component>
+      </RouterLink>
     </div>
 
     <!-- Desktop Horizontal Scroll -->
@@ -57,15 +56,14 @@ const scrollRight = () => {
       ref="scrollRef"
       class="hidden md:flex gap-4 scroll-smooth overflow-x-auto px-4 max-w-screen-xl mx-auto pb-6 touch-pan-x hide-scrollbar"
     >
-      <component
+      <RouterLink
         v-for="(product, index) in products"
         :key="index"
-        :is="product.stock > 0 ? RouterLink : 'div'"
-        :to="product.stock > 0 ? { name: 'productDetail', params: { id: product.id } } : undefined"
+        :to="{ name: 'productDetail', params: { id: product.id } }"
         class="block flex-shrink-0 w-[210px]"
       >
         <ProductCard :product="product" />
-      </component>
+      </RouterLink>
     </div>
   </div>
 </template>

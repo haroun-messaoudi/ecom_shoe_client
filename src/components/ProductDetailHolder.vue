@@ -3,7 +3,12 @@
     <div class="flex flex-col lg:flex-row gap-10">
       <!-- Image -->
       <div class="flex-1">
-        <img :src="product.image" :alt="product.name" loading="lazy" class="rounded-xl w-full max-h-[500px] object-contain shadow" />
+        <img
+          :src="product.image"
+          :alt="product.name"
+          loading="lazy"
+          class="rounded-xl w-full max-h-[500px] object-contain shadow"
+        />
       </div>
 
       <!-- Details -->
@@ -21,7 +26,12 @@
         </div>
 
         <!-- Stock info -->
-        <p class="text-sm text-gray-500">In Stock: {{ product.stock }}</p>
+        <p class="text-sm text-gray-500">
+          In Stock:
+          <span :class="{ 'text-red-600 font-semibold': product.stock === 0 }">
+            {{ product.stock }}
+          </span>
+        </p>
 
         <!-- Variants -->
         <div class="space-y-3">
@@ -52,7 +62,9 @@
                 @click="selectedSize = size"
                 :class="[
                   'px-4 py-2 border rounded-md text-sm font-medium',
-                  selectedSize === size ? 'bg-orange-500 text-white border-orange-500' : 'border-gray-300 text-gray-700 hover:bg-orange-50'
+                  selectedSize === size
+                    ? 'bg-orange-500 text-white border-orange-500'
+                    : 'border-gray-300 text-gray-700 hover:bg-orange-50'
                 ]"
               >
                 {{ size }}
@@ -71,20 +83,26 @@
               type="number"
               min="1"
               class="w-20 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-300 focus:outline-none"
+              :disabled="product.stock === 0"
             />
           </div>
 
           <button
-            class="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-full text-lg font-medium transition"
+            class="px-6 py-3 rounded-full text-lg font-medium transition"
+            :class="product.stock === 0
+              ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
+              : 'bg-orange-500 hover:bg-orange-600 text-white'"
+            :disabled="product.stock === 0"
             @click="addToCart"
           >
-            Add to Cart
+            {{ product.stock === 0 ? 'Out of Stock' : 'Add to Cart' }}
           </button>
         </div>
       </div>
     </div>
   </div>
 </template>
+
 
 <script setup>
 import { ref } from 'vue'
