@@ -11,7 +11,8 @@ const searchStore = useSearchStore()
 const productStore = useProductStore()
 
 const categories = ref([])
-const activeCategoryId = ref(null) // Not preselecting anything
+const activeCategoryId = ref(null)
+const isMobile = ref(window.innerWidth < 768)
 
 const recommended = computed(() => productStore.topOrdered.slice(0, 4))
 const discounted = computed(() => productStore.discounted.slice(0, 4))
@@ -40,6 +41,8 @@ function setupScrollAnimations() {
     document.querySelectorAll('.scroll-animate').forEach(el => observer.observe(el))
   })
 }
+
+
 
 onMounted(async () => {
   await searchStore.fetchCategories()
@@ -93,26 +96,31 @@ watch(
     </section>
 
     <!-- Category Carousel -->
-    <section class="w-full px-4 mb-12">
+    <section class="w-full px-0 mb-12">
       <h2 class="text-xl font-semibold mb-4 text-center">Shop by Category</h2>
       <div class="max-w-screen-xl mx-auto">
-        <div class="flex gap-4 overflow-x-auto no-scrollbar pb-2 snap-x snap-mandatory justify-center lg:justify-start">
+        <div class="flex gap-4 overflow-x-auto no-scrollbar pb-2 snap-x snap-mandatory justify-start pl-0 -mr-4">
           <div
             v-for="cat in categories"
             :key="cat.id"
-            class="min-w-[140px] snap-start flex-shrink-0 text-center scroll-animate opacity-0 translate-y-4"
+            :class="[
+              'min-w-[110px] md:min-w-[140px] snap-start flex-shrink-0 text-center scroll-animate opacity-0 translate-y-4',
+              cat.id === 0 ? 'ml-4' : ''
+            ]"
           >
             <div
-              class="relative w-full h-28 rounded-lg overflow-hidden cursor-pointer group shadow-lg hover:shadow-xl transition-shadow border-2"
+              class="relative w-full h-28 rounded-lg overflow-hidden cursor-pointer group transition-shadow border-2"
               :class="{
-                'border-orange-500 shadow-md': activeCategoryId === cat.id,
+                'border-orange-500': activeCategoryId === cat.id,
                 'border-transparent': activeCategoryId !== cat.id
               }"
               @click="goToCategory(cat)"
             >
-              <!-- Custom SVG for 'All' -->
-              <div v-if="cat.id === 0" class="w-full h-full relative bg-gray-400 text-orange-700 font-semibold text-sm flex items-center justify-center">
-                <!-- Minimal Grid SVG Icon for 'All' -->
+              <!-- 'All' Icon Card -->
+              <div
+                v-if="cat.id === 0"
+                class="w-full h-full relative bg-gray-400 text-orange-700 font-semibold text-sm flex items-center justify-center"
+              >
                 <svg class="w-9 h-9 text-white opacity-90" fill="none" viewBox="0 0 28 28" stroke="currentColor" stroke-width="1.5">
                   <rect x="4" y="4" width="6" height="6" rx="2" fill="currentColor" />
                   <rect x="4" y="14" width="6" height="6" rx="2" fill="currentColor" />
@@ -124,21 +132,20 @@ watch(
                 </div>
               </div>
 
-              <!-- Normal image for other categories -->
+              <!-- Category image -->
               <img
                 v-else-if="cat.image"
                 :src="cat.image"
                 :alt="cat.name"
                 class="w-full h-full object-cover transition-transform group-hover:scale-105"
               />
-              <div
-                v-else
-                class="w-full h-full bg-orange-100 flex items-center justify-center text-orange-700"
-              >
+
+              <!-- Fallback background for categories without image -->
+              <div v-else class="w-full h-full bg-orange-100 flex items-center justify-center text-orange-700">
                 {{ cat.name }}
               </div>
 
-              <!-- Overlay label -->
+              <!-- Name overlay -->
               <div
                 v-if="cat.id !== 0"
                 class="absolute inset-0 bg-black/40 flex items-center justify-center text-white font-semibold text-sm"
@@ -150,6 +157,7 @@ watch(
         </div>
       </div>
     </section>
+
 
     <!-- Product Sections -->
     <main class="px-4 py-12 space-y-20 max-w-screen-xl mx-auto">
