@@ -106,15 +106,18 @@ const quantity = ref(1)
 
 const cartStore = useCartStore()
 const router = useRouter()
-
 const addToCart = () => {
   if (quantity.value < 1) {
     toast.warning('Quantity must be at least 1')
     return
   }
 
-  if (quantity.value > props.product.stock) {
-    toast.error(`Only ${props.product.stock} in stock`)
+  const existing = cartStore.items.find(i => i.productId === props.product.id)
+  const currentQty = existing?.quantity || 0
+  const newTotalQty = currentQty + quantity.value
+
+  if (newTotalQty > props.product.stock) {
+    toast.error(`You already have ${currentQty} in cart. Only ${props.product.stock} in stock.`)
     return
   }
 
@@ -130,7 +133,6 @@ const addToCart = () => {
 
   cartStore.addItem(item)
   toast.success(`${props.product.name} x${quantity.value} added to cart`)
-
   router.push({ name: 'products' })
 }
 </script>
