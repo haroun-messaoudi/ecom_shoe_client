@@ -62,6 +62,18 @@ onMounted(async () => {
             }"
             @click="goToCategory(cat)"
           >
+            <div v-if="cat.id === 0" class="w-full h-full relative bg-gray-400 text-orange-700 font-semibold text-sm flex items-center justify-center">
+                <!-- Minimal Grid SVG Icon for 'All' -->
+                <svg class="w-9 h-9 text-white opacity-90" fill="none" viewBox="0 0 28 28" stroke="currentColor" stroke-width="1.5">
+                  <rect x="4" y="4" width="6" height="6" rx="2" fill="currentColor" />
+                  <rect x="4" y="14" width="6" height="6" rx="2" fill="currentColor" />
+                  <rect x="14" y="4" width="6" height="6" rx="2" fill="currentColor" />
+                  <rect x="14" y="14" width="6" height="6" rx="2" fill="currentColor" />
+                </svg>
+                <div class="absolute inset-0 flex items-end justify-center pb-2">
+                  <span class="text-white font-semibold text-base drop-shadow">All</span>
+                </div>
+            </div>
             <img
               v-if="cat.image"
               :src="cat.image"
@@ -75,6 +87,7 @@ onMounted(async () => {
               {{ cat.name }}
             </div>
             <div
+              v-if="cat.id !== 0"
               class="absolute inset-0 bg-black/40 flex items-center justify-center text-white font-semibold text-sm"
             >
               {{ cat.name }}

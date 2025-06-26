@@ -123,6 +123,7 @@ const addToCart = () => {
 
   const item = {
     productId: props.product.id,
+    stock : props.product.stock,
     name: props.product.name,
     price: props.product.discount_price || props.product.price,
     image: props.product.image,

@@ -11,7 +11,7 @@ const searchStore = useSearchStore()
 const productStore = useProductStore()
 
 const categories = ref([])
-const activeCategoryId = ref(0)
+const activeCategoryId = ref(null) // Not preselecting anything
 
 const recommended = computed(() => productStore.topOrdered.slice(0, 4))
 const discounted = computed(() => productStore.discounted.slice(0, 4))
@@ -23,8 +23,8 @@ const loadingNewProducts = computed(() => productStore.loadingNewProducts)
 
 function goToCategory(cat) {
   activeCategoryId.value = cat.id
-  searchStore.setCategory(cat.id || null)
-  router.push({ name: 'products', query: { category: cat.id || '' } })
+  searchStore.setCategory(cat.id === 0 ? null : cat.id)
+  router.push({ name: 'products', query: { category: cat.id === 0 ? '' : cat.id } })
 }
 
 function setupScrollAnimations() {
@@ -43,7 +43,8 @@ function setupScrollAnimations() {
 
 onMounted(async () => {
   await searchStore.fetchCategories()
-  categories.value = searchStore.categories
+  categories.value = [{ id: 0, name: 'All', image: null }, ...searchStore.categories]
+
   productStore.fetchTopOrdered()
   productStore.fetchDiscounted()
   productStore.fetchNewProducts()
@@ -90,59 +91,80 @@ watch(
         </button>
       </div>
     </section>
-    <div class="flex flex-col items-center w-full">
-    <!-- Category Image Carousel -->
-      <section class="w-full px-4 mb-12">
-        <h2 class="text-xl font-semibold mb-4 text-center">Shop by Category</h2>
-        <div class="max-w-screen-xl mx-auto">
-          <div class="flex gap-4 overflow-x-auto no-scrollbar pb-2 snap-x snap-mandatory justify-center lg:justify-start">
+
+    <!-- Category Carousel -->
+    <section class="w-full px-4 mb-12">
+      <h2 class="text-xl font-semibold mb-4 text-center">Shop by Category</h2>
+      <div class="max-w-screen-xl mx-auto">
+        <div class="flex gap-4 overflow-x-auto no-scrollbar pb-2 snap-x snap-mandatory justify-center lg:justify-start">
+          <div
+            v-for="cat in categories"
+            :key="cat.id"
+            class="min-w-[140px] snap-start flex-shrink-0 text-center scroll-animate opacity-0 translate-y-4"
+          >
             <div
-              v-for="cat in categories"
-              :key="cat.id"
-              class="min-w-[140px] snap-start flex-shrink-0 text-center scroll-animate opacity-0 translate-y-4"
+              class="relative w-full h-28 rounded-lg overflow-hidden cursor-pointer group shadow-lg hover:shadow-xl transition-shadow border-2"
+              :class="{
+                'border-orange-500 shadow-md': activeCategoryId === cat.id,
+                'border-transparent': activeCategoryId !== cat.id
+              }"
+              @click="goToCategory(cat)"
             >
+              <!-- Custom SVG for 'All' -->
+              <div v-if="cat.id === 0" class="w-full h-full relative bg-gray-400 text-orange-700 font-semibold text-sm flex items-center justify-center">
+                <!-- Minimal Grid SVG Icon for 'All' -->
+                <svg class="w-9 h-9 text-white opacity-90" fill="none" viewBox="0 0 28 28" stroke="currentColor" stroke-width="1.5">
+                  <rect x="4" y="4" width="6" height="6" rx="2" fill="currentColor" />
+                  <rect x="4" y="14" width="6" height="6" rx="2" fill="currentColor" />
+                  <rect x="14" y="4" width="6" height="6" rx="2" fill="currentColor" />
+                  <rect x="14" y="14" width="6" height="6" rx="2" fill="currentColor" />
+                </svg>
+                <div class="absolute inset-0 flex items-end justify-center pb-2">
+                  <span class="text-white font-semibold text-base drop-shadow">All</span>
+                </div>
+              </div>
+
+              <!-- Normal image for other categories -->
+              <img
+                v-else-if="cat.image"
+                :src="cat.image"
+                :alt="cat.name"
+                class="w-full h-full object-cover transition-transform group-hover:scale-105"
+              />
               <div
-                class="relative w-full h-28 rounded-lg overflow-hidden cursor-pointer group shadow-lg hover:shadow-xl transition-shadow"
-                @click="goToCategory(cat)"
+                v-else
+                class="w-full h-full bg-orange-100 flex items-center justify-center text-orange-700"
               >
-                <img
-                  v-if="cat.image"
-                  :src="cat.image"
-                  :alt="cat.name"
-                  class="w-full h-full object-cover transition-transform group-hover:scale-105"
-                />
-                <div
-                  v-else
-                  class="w-full h-full bg-orange-100 flex items-center justify-center text-orange-700"
-                >
-                  {{ cat.name }}
-                </div>
-                <div
-                  class="absolute inset-0 bg-black/40 flex items-center justify-center text-white font-semibold text-sm"
-                >
-                  {{ cat.name }}
-                </div>
+                {{ cat.name }}
+              </div>
+
+              <!-- Overlay label -->
+              <div
+                v-if="cat.id !== 0"
+                class="absolute inset-0 bg-black/40 flex items-center justify-center text-white font-semibold text-sm"
+              >
+                {{ cat.name }}
               </div>
             </div>
           </div>
         </div>
-      </section>
+      </div>
+    </section>
 
-      <!-- Main Content with Animate on Scroll -->
-      <main class="px-4 py-12 space-y-20 max-w-screen-xl mx-auto">
-        <section id="productSections" class="space-y-20">
-          <div class="scroll-animate opacity-0 translate-y-8">
-            <ProductList title="Recommended for You" :products="recommended" :loading="loadingRecommended" />
-          </div>
-          <div class="scroll-animate opacity-0 translate-y-8">
-            <ProductList title="Products on Sale" :products="discounted" :loading="loadingDiscounted" />
-          </div>
-          <div class="scroll-animate opacity-0 translate-y-8">
-            <ProductList title="New Arrivals" :products="newProducts" :loading="loadingNewProducts" />
-          </div>
-        </section>
-      </main>
-    </div>
+    <!-- Product Sections -->
+    <main class="px-4 py-12 space-y-20 max-w-screen-xl mx-auto">
+      <section id="productSections" class="space-y-20">
+        <div class="scroll-animate opacity-0 translate-y-8">
+          <ProductList title="Recommended for You" :products="recommended" :loading="loadingRecommended" />
+        </div>
+        <div class="scroll-animate opacity-0 translate-y-8">
+          <ProductList title="Products on Sale" :products="discounted" :loading="loadingDiscounted" />
+        </div>
+        <div class="scroll-animate opacity-0 translate-y-8">
+          <ProductList title="New Arrivals" :products="newProducts" :loading="loadingNewProducts" />
+        </div>
+      </section>
+    </main>
   </div>
 </template>
 
@@ -154,7 +176,6 @@ watch(
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
-
 .fade-in-up {
   opacity: 1 !important;
   transform: translateY(0) !important;

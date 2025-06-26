@@ -3,14 +3,38 @@
     <!-- Blocking full-page loading screen -->
     <div
       v-if="submitting"
-      class="fixed inset-0 bg-white bg-opacity-80 z-50 flex flex-col items-center justify-center space-y-4"
+      class="fixed inset-0 bg-white bg-opacity-90 z-50 flex flex-col items-center justify-center space-y-6"
     >
-      <svg class="animate-spin h-10 w-10 text-orange-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-        <path class="opacity-75" fill="currentColor"
-              d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"/>
+      <!-- Animated delivery truck SVG -->
+      <svg class="w-20 h-20 text-orange-500 animate-bounce" fill="none" viewBox="0 0 48 48">
+        <rect x="4" y="18" width="28" height="14" rx="2" fill="#FDBA74"/>
+        <rect x="32" y="24" width="12" height="8" rx="2" fill="#FDBA74"/>
+        <circle cx="12" cy="36" r="4" fill="#FB923C"/>
+        <circle cx="36" cy="36" r="4" fill="#FB923C"/>
+        <rect x="8" y="22" width="8" height="4" rx="1" fill="#fff" opacity="0.5"/>
+        <rect x="36" y="28" width="4" height="2" rx="1" fill="#fff" opacity="0.5"/>
       </svg>
-      <p class="text-lg text-gray-700">Submitting your order…</p>
+      <!-- Animated sending message -->
+      <div class="flex flex-col items-center">
+        <p class="text-lg text-gray-700 font-semibold mb-2">Sending your order<span class="loading-dots"></span></p>
+        <p class="text-sm text-gray-500">Please wait while we process your request.</p>
+      </div>
+    </div>
+
+    <!-- Success SVG screen -->
+    <div
+      v-if="orderSuccess"
+      class="fixed inset-0 bg-white bg-opacity-90 z-50 flex flex-col items-center justify-center space-y-6"
+    >
+      <!-- Success SVG (checkmark) -->
+      <svg class="w-20 h-20 text-green-500 animate-bounce" fill="none" viewBox="0 0 48 48">
+        <circle cx="24" cy="24" r="22" stroke="#22C55E" stroke-width="4" fill="#DCFCE7"/>
+        <path d="M16 24l6 6 10-10" stroke="#22C55E" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <div class="flex flex-col items-center">
+        <p class="text-lg text-green-700 font-semibold mb-2">Order placed successfully!</p>
+        <p class="text-sm text-gray-500">Redirecting to home...</p>
+      </div>
     </div>
 
     <section class="max-w-screen-lg mx-auto px-4 sm:px-6 py-8 space-y-10">
@@ -77,26 +101,36 @@
       <div v-if="cartStore.items.length > 0" class="space-y-6">
         <h2 class="text-2xl font-bold text-gray-800">Delivery Information</h2>
 
+        <!-- Full Name -->
         <div>
           <label for="name" class="block text-gray-700 font-medium mb-1">Full Name</label>
-          <input
+          <InputText
             id="name"
             v-model="name"
+            :class="{'p-invalid': errors.name}"
             type="text"
             placeholder="Your full name"
-            class="w-full sm:w-96 border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-orange-300"
+            class="w-full sm:w-96"
           />
+          <Message v-if="errors.name" severity="error" class="mt-2 animate-fade-in">
+            {{ errors.name }}
+          </Message>
         </div>
 
+        <!-- Phone Number -->
         <div class="mb-4">
           <label for="phone" class="block text-gray-700 font-medium mb-1">Phone Number</label>
-          <input
+          <InputText
             id="phone"
             v-model="phone"
+            :class="{'p-invalid': errors.phone}"
             type="tel"
             placeholder="06XXXXXXXX"
-            class="w-full sm:w-96 border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-orange-300"
+            class="w-full sm:w-96"
           />
+          <Message v-if="errors.phone" severity="error" class="mt-2 animate-fade-in">
+            {{ errors.phone }}
+          </Message>
         </div>
 
         <div class="flex flex-row gap-4 pt-4 pb-4">
@@ -111,23 +145,34 @@
         </div>
 
         <div class="flex flex-col sm:flex-row gap-4">
+          <!-- Wilaya Dropdown -->
           <Dropdown
             v-model="selectedState"
             :options="states"
+            :class="{'p-invalid': errors.selectedState}"
             optionLabel="name"
             placeholder="Select Wilaya"
             class="w-full sm:w-64 mt-4 mb-2"
             filter
           />
+          <Message v-if="errors.selectedState" severity="error" class="mt-2 animate-fade-in">
+            {{ errors.selectedState }}
+          </Message>
+
+          <!-- Commune Dropdown -->
           <Dropdown
             v-model="selectedCommune"
             :options="communes[selectedState?.code] || []"
+            :class="{'p-invalid': errors.selectedCommune}"
             optionLabel="name"
             placeholder="Select Commune"
             class="w-full sm:w-64 mt-4 mb-2"
             :disabled="!selectedState || deliveryType !== 'home'"
             filter
           />
+          <Message v-if="errors.selectedCommune" severity="error" class="mt-2 animate-fade-in">
+            {{ errors.selectedCommune }}
+          </Message>
         </div>
 
         <div class="pt-4">
@@ -142,7 +187,6 @@
     </section>
   </section>
 </template>
-
 <script setup>
 import { ref, computed } from 'vue'
 import { useCartStore } from '@/stores/cart'
@@ -150,8 +194,10 @@ import Dropdown from 'primevue/dropdown'
 import RadioButton from 'primevue/radiobutton'
 import ConfirmDialog from 'primevue/confirmdialog'
 import { useConfirm } from 'primevue/useconfirm'
-import { RouterLink } from 'vue-router'
+import { RouterLink, useRouter } from 'vue-router'
+import InputText from 'primevue/inputtext'
 import axios from 'axios'
+import Message from 'primevue/message'
 
 // ✅ Toastify
 import { toast } from 'vue3-toastify'
@@ -159,6 +205,7 @@ import 'vue3-toastify/dist/index.css'
 
 const cartStore = useCartStore()
 const confirm = useConfirm()
+const router = useRouter()
 
 const name = ref('')
 const phone = ref('')
@@ -166,6 +213,14 @@ const deliveryType = ref('home')
 const selectedState = ref(null)
 const selectedCommune = ref(null)
 const submitting = ref(false)
+const orderSuccess = ref(false) // <-- Add this
+
+const errors = ref({
+  name: '',
+  phone: '',
+  selectedState: '',
+  selectedCommune: ''
+})
 
 const states = [
   { name: 'Algiers', code: 'ALG', id: 1 },
@@ -194,12 +249,38 @@ function confirmRemove(productId) {
 }
 
 function confirmOrder() {
+  if (!validateForm()) {
+    return
+  }
   confirm.require({
     message: 'Are you sure you want to submit your order?',
     header: 'Confirm Order',
     icon: 'pi pi-check',
     accept: submitOrder
   })
+}
+
+function validateForm() {
+  let valid = true
+  errors.value = { name: '', phone: '', selectedState: '', selectedCommune: '' }
+
+  if (!name.value.trim()) {
+    errors.value.name = 'Full name is required'
+    valid = false
+  }
+  if (!phone.value.trim()) {
+    errors.value.phone = 'Phone number is required'
+    valid = false
+  }
+  if (!selectedState.value) {
+    errors.value.selectedState = 'Wilaya is required'
+    valid = false
+  }
+  if (deliveryType.value === 'home' && !selectedCommune.value) {
+    errors.value.selectedCommune = 'Commune is required'
+    valid = false
+  }
+  return valid
 }
 
 async function submitOrder() {
@@ -218,25 +299,52 @@ async function submitOrder() {
       }))
     }
 
-    await axios.post('https://ecom-1qve.onrender.com/api/orders/create', payload)
+    const response = await axios.post('https://ecom-1qve.onrender.com/api/orders/create', payload)
     toast.success('Your order was placed successfully!')
-    cartStore.clearCart()
-  } catch (err) {
-    console.error(err)
+    submitting.value = false
+    orderSuccess.value = true // <-- Show success SVG
 
+    // Wait for the SVG, then redirect
+    setTimeout(() => {
+      router.push('/')
+      setTimeout(() => {
+        cartStore.clearCart()
+        orderSuccess.value = false // Hide SVG after redirect
+      }, 500)
+    }, 1500) // Show SVG for 1.5s
+  } catch (err) {
+    console.error(err);
+
+    // If backend returns a string message, show it
+    if (err.response?.data?.message) {
+      toast.error(err.response.data.message);
+      return;
+    }
+
+    // If backend returns an object with field errors
     if (err.response?.status === 400 && err.response.data) {
-      const errors = err.response.data
+      const errors = err.response.data;
       for (const key in errors) {
-        const messages = errors[key]
+        // Custom handling for items field
+        if (key === 'items') {
+          toast.error('One or more products are out of stock or unavailable.');
+          continue;
+        }
+        const messages = errors[key];
         if (Array.isArray(messages)) {
-          messages.forEach(msg => toast.error(`${key.replace(/_/g, ' ')}: ${msg}`))
+          messages.forEach(msg => {
+            toast.error(`${key.charAt(0).toUpperCase() + key.slice(1)}: ${msg}`);
+          });
+        } else if (typeof messages === 'string') {
+          toast.error(`${key.charAt(0).toUpperCase() + key.slice(1)}: ${messages}`);
         } else {
-          toast.error(`${key}: ${messages}`)
+          toast.error(`${key}: ${JSON.stringify(messages)}`);
         }
       }
     } else {
-      toast.error('Something went wrong while submitting your order.')
+      toast.error('Something went wrong while submitting your order.');
     }
+
   } finally {
     submitting.value = false
   }
@@ -254,5 +362,26 @@ async function submitOrder() {
 }
 :deep(.p-radiobutton-icon) {
   background-color: white !important;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(8px);}
+  to { opacity: 1; transform: none;}
+}
+.animate-fade-in {
+  animation: fade-in 0.3s;
+}
+
+@keyframes dots {
+  0%, 20% { content: ""; }
+  40% { content: "."; }
+  60% { content: ".."; }
+  80%, 100% { content: "..."; }
+}
+.loading-dots::after {
+  display: inline-block;
+  animation: dots 1.2s steps(4, end) infinite;
+  content: "";
+  font-weight: bold;
 }
 </style>
