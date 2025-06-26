@@ -3,7 +3,7 @@
     <div class="flex flex-col lg:flex-row gap-10">
       <!-- Image -->
       <div class="flex-1">
-        <img :src="product.image" :alt="product.name" class="rounded-xl w-full max-h-[500px] object-contain shadow" />
+        <img :src="product.image" :alt="product.name" loading="lazy" class="rounded-xl w-full max-h-[500px] object-contain shadow" />
       </div>
 
       <!-- Details -->

@@ -30,20 +30,47 @@ onMounted(async () => {
 
 <template>
   <div class="max-w-screen-xl mx-auto px-4 py-8">
-    <div v-if="loading" class="flex flex-col items-center justify-center py-20 text-gray-600 space-y-4">
-      <svg class="animate-spin h-8 w-8 text-orange-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-        <path class="opacity-75" fill="currentColor"
-              d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"/>
-      </svg>
-      <p class="text-lg font-medium">Loading product details…</p>
+    <div v-if="loading" class="flex flex-col lg:flex-row gap-10 animate-pulse">
+      <!-- Image Placeholder -->
+      <div class="flex-1">
+        <div class="w-full h-[500px] bg-gray-200 rounded-xl shadow-inner"></div>
+      </div>
+
+      <!-- Details Placeholder -->
+      <div class="flex-1 space-y-4">
+        <!-- Title -->
+        <div class="h-10 bg-gray-300 rounded w-3/4"></div>
+
+        <!-- Description lines -->
+        <div class="h-4 bg-gray-200 rounded w-full"></div>
+        <div class="h-4 bg-gray-200 rounded w-5/6"></div>
+        <div class="h-4 bg-gray-200 rounded w-4/6"></div>
+
+        <!-- Price -->
+        <div class="h-8 bg-gray-300 rounded w-40 mt-4"></div>
+
+        <!-- Stock Info -->
+        <div class="h-4 bg-gray-200 rounded w-32"></div>
+        <!-- Size Buttons -->
+        <div>
+          <div class="h-5 bg-gray-200 rounded w-20 mb-2"></div>
+          <div class="flex gap-2">
+            <div class="w-16 h-10 bg-gray-300 rounded-md"></div>
+            <div class="w-16 h-10 bg-gray-300 rounded-md"></div>
+            <div class="w-16 h-10 bg-gray-300 rounded-md"></div>
+          </div>
+        </div>
+
+        <!-- Quantity & Button -->
+        <div class="pt-4 flex items-center gap-4 flex-wrap">
+          <div class="w-28 h-10 bg-gray-300 rounded-md"></div>
+          <div class="w-36 h-12 bg-orange-300 rounded-full"></div>
+        </div>
+      </div>
     </div>
-    <div v-else-if="error" class="text-center py-20 text-red-500">
-      {{ error }}
-    </div>
-    <ProductDetailHolder
-      v-else
-      :product="product"
-    />
+
+    <!-- ✅ Product Detail Display -->
+    <ProductDetailHolder v-else :product="product" />
   </div>
 </template>
+
