@@ -54,7 +54,7 @@ watch(currentPage, fetchPage)
     >
       No new arrivals found.
     </div>
-
+<!-- 
     <div class="flex justify-center mt-8" v-if="totalPages > 1">
       <button
         @click="currentPage--"
@@ -75,6 +75,6 @@ watch(currentPage, fetchPage)
       >
         Next
       </button>
-    </div>
+    </div> -->
   </div>
 </template>

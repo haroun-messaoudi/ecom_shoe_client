@@ -160,19 +160,25 @@ watch(
 
 
     <!-- Product Sections -->
-    <main class="px-4 py-12 space-y-20 max-w-screen-xl mx-auto">
-      <section id="productSections" class="space-y-20">
-        <div class="scroll-animate opacity-0 translate-y-8">
-          <ProductList title="Recommended for You" :products="recommended" :loading="loadingRecommended" />
-        </div>
-        <div class="scroll-animate opacity-0 translate-y-8">
-          <ProductList title="Products on Sale" :products="discounted" :loading="loadingDiscounted" />
-        </div>
-        <div class="scroll-animate opacity-0 translate-y-8">
-          <ProductList title="New Arrivals" :products="newProducts" :loading="loadingNewProducts" />
-        </div>
-      </section>
-    </main>
+    <section id="productSections" class="space-y-24">
+      <!-- Recommended Section -->
+      <div class="scroll-animate opacity-0 translate-y-8 rounded-2xl bg-white shadow-md px-6 py-10 md:px-10">
+        <h2 class="text-center text-3xl font-semibold text-gray-800 mb-10 tracking-tight">Recommended for You</h2>
+        <ProductList :products="recommended" :loading="loadingRecommended" />
+      </div>
+
+      <!-- Discounted Section -->
+      <div class="scroll-animate opacity-0 translate-y-8 rounded-2xl bg-gradient-to-tr from-orange-50 to-white shadow-md px-6 py-10 md:px-10">
+        <h2 class="text-center text-3xl font-semibold text-gray-800 mb-10 tracking-tight">Products on Sale</h2>
+        <ProductList :products="discounted" :loading="loadingDiscounted" />
+      </div>
+
+      <!-- New Arrivals Section -->
+      <div class="scroll-animate opacity-0 translate-y-8 rounded-2xl bg-white shadow-md px-6 py-10 md:px-10">
+        <h2 class="text-center text-3xl font-semibold text-gray-800 mb-10 tracking-tight">New Arrivals</h2>
+        <ProductList :products="newProducts" :loading="loadingNewProducts" />
+      </div>
+    </section>
   </div>
 </template>
 

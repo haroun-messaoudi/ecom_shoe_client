@@ -1,103 +1,112 @@
 <template>
   <div class="max-w-screen-xl mx-auto px-4 py-8">
-    <div class="flex flex-col lg:flex-row gap-10">
-      <!-- Image -->
-      <div class="flex-1">
-        <img
-          :src="product.image"
-          :alt="product.name"
-          loading="lazy"
-          class="rounded-xl w-full max-h-[500px] object-contain shadow"
-        />
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
+      <!-- Product Image -->
+      <div class="flex justify-center items-center">
+        <Card class="w-full">
+          <template #content>
+            <img
+              :src="product.image"
+              :alt="product.name"
+              loading="lazy"
+              class="rounded-xl w-full max-h-[500px] object-contain shadow"
+            />
+          </template>
+        </Card>
       </div>
 
-      <!-- Details -->
-      <div class="flex-1 space-y-4">
-        <h1 class="text-3xl font-bold text-gray-800">{{ product.name }}</h1>
-        <p class="text-gray-600">{{ product.description }}</p>
+      <!-- Product Details -->
+      <div>
+        <Card class="w-full">
+          <template #content>
+            <div class="space-y-6">
+              <h1 class="text-2xl md:text-3xl font-bold text-gray-800">{{ product.name }}</h1>
+              <p class="text-gray-600 text-sm md:text-base">{{ product.description }}</p>
 
-        <!-- ✅ Show price & discount -->
-        <div class="text-2xl font-bold mt-2">
-          <span v-if="product.discount_price">
-            <span class="text-gray-400 line-through mr-2">{{ product.price }} DA</span>
-            <span class="text-orange-500">{{ product.discount_price }} DA</span>
-          </span>
-          <span v-else class="text-orange-500">{{ product.price }} DA</span>
-        </div>
+              <Divider />
 
-        <!-- Stock info -->
-        <p class="text-sm text-gray-500">
-          In Stock:
-          <span :class="{ 'text-red-600 font-semibold': product.stock === 0 }">
-            {{ product.stock }}
-          </span>
-        </p>
+              <!-- Price & Promo -->
+              <div class="flex items-center gap-3 flex-wrap">
+                <span v-if="product.discount_price" class="text-gray-400 line-through text-xl">
+                  {{ product.price }} DA
+                </span>
+                <span class="text-2xl font-bold text-orange-500">
+                  {{ product.discount_price || product.price }} DA
+                </span>
+                <Tag v-if="product.discount_price" severity="warn" value="Promo" />
+              </div>
 
-        <!-- Variants -->
-        <div class="space-y-3">
-          <!-- Color -->
-          <div v-if="product.colors?.length">
-            <h3 class="font-medium text-gray-700">Color:</h3>
-            <div class="flex gap-2">
-              <button
-                v-for="color in product.colors"
-                :key="color"
-                @click="selectedColor = color"
-                :class="[
-                  'w-8 h-8 rounded-full border-2',
-                  color,
-                  selectedColor === color ? 'border-orange-500 ring-2 ring-orange-200' : 'border-gray-300'
-                ]"
-              ></button>
+              <Divider />
+
+              <!-- Size -->
+              <div class="flex flew-row gap-4">
+
+                <div v-if="product.size" class="flex items-center gap-2 flex-wrap">
+                  <i class="pi pi-tag text-orange-500"></i>
+                  <span class="font-medium text-gray-700">Size:</span>
+                  <Tag :value="product.size" class="bg-orange-100 text-orange-600 border-none" />
+                </div>
+
+                <!-- Stock -->
+                <div class="flex items-center gap-2 flex-wrap">
+                  <i class="pi pi-box text-gray-500"></i>
+                  <span class="font-medium text-gray-700">In Stock:</span>
+                  <Tag
+                    :value="product.stock"
+                    :severity="product.stock === 0 ? 'danger' : 'info'"
+                    class="font-semibold"
+                  />
+                </div>
+              </div>
+              <!-- Color Options -->
+              <div v-if="product.colors?.length">
+                <span class="font-medium text-gray-700">Color:</span>
+                <div class="flex gap-2 mt-2 flex-wrap">
+                  <Button
+                    v-for="color in product.colors"
+                    :key="color"
+                    @click="selectedColor = color"
+                    :style="{
+                      background: color,
+                      borderColor: selectedColor === color ? '#fb923c' : '#d1d5db',
+                    }"
+                    class="w-8 h-8 p-0 border-2 rounded-full shadow-none"
+                    :outlined="selectedColor !== color"
+                  />
+                </div>
+              </div>
+
+              <Divider />
+
+              <!-- Quantity and Add to Cart -->
+              <div class="flex flex-col gap-4 pt-4">
+                <div class="flex items-center gap-2 max-w-36">
+                  <label for="quantity" class="text-gray-700 font-medium">Quantity:</label>
+                  <InputNumber
+                    id="quantity"
+                    v-model="quantity"
+                    :min="1"
+                    :max="product.stock"
+                    showButtons
+                    buttonLayout="horizontal"
+                    decrementButtonClass="p-button-text"
+                    incrementButtonClass="p-button-text"
+                    :disabled="product.stock === 0"
+                    class="w-full sm:w-32"
+                    :inputStyle="{ width: '60px' }"
+                  />
+                </div>
+                <Button
+                  :label="product.stock === 0 ? 'Out of Stock' : 'Add to Cart'"
+                  :disabled="product.stock === 0"
+                  class="w-full sm:w-auto px-6 py-3 rounded-full text-lg font-medium"
+                  :class="product.stock === 0 ? 'p-button-secondary' : 'p-button-warning'"
+                  @click="addToCart"
+                />
+              </div>
             </div>
-          </div>
-
-          <!-- Size -->
-          <div v-if="product.sizes?.length">
-            <h3 class="font-medium text-gray-700">Size:</h3>
-            <div class="flex gap-2">
-              <button
-                v-for="size in product.sizes"
-                :key="size"
-                @click="selectedSize = size"
-                :class="[
-                  'px-4 py-2 border rounded-md text-sm font-medium',
-                  selectedSize === size
-                    ? 'bg-orange-500 text-white border-orange-500'
-                    : 'border-gray-300 text-gray-700 hover:bg-orange-50'
-                ]"
-              >
-                {{ size }}
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Actions -->
-        <div class="pt-4 flex items-center gap-4 flex-wrap">
-          <div class="flex items-center gap-2">
-            <label for="quantity" class="text-gray-700 font-medium">Quantity:</label>
-            <input
-              id="quantity"
-              v-model.number="quantity"
-              type="number"
-              min="1"
-              class="w-20 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-300 focus:outline-none"
-              :disabled="product.stock === 0"
-            />
-          </div>
-
-          <button
-            class="px-6 py-3 rounded-full text-lg font-medium transition"
-            :class="product.stock === 0
-              ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
-              : 'bg-orange-500 hover:bg-orange-600 text-white'"
-            :disabled="product.stock === 0"
-            @click="addToCart"
-          >
-            {{ product.stock === 0 ? 'Out of Stock' : 'Add to Cart' }}
-          </button>
-        </div>
+          </template>
+        </Card>
       </div>
     </div>
   </div>
@@ -111,6 +120,13 @@ import { useRouter } from 'vue-router'
 import { toast } from 'vue3-toastify'
 import 'vue3-toastify/dist/index.css'
 
+// PrimeVue components
+import Card from 'primevue/card'
+import Divider from 'primevue/divider'
+import Tag from 'primevue/tag'
+import Button from 'primevue/button'
+import InputNumber from 'primevue/inputnumber'
+
 const props = defineProps({
   product: {
     type: Object,
@@ -119,7 +135,6 @@ const props = defineProps({
 })
 
 const selectedColor = ref(props.product.colors?.[0] || '')
-const selectedSize = ref(props.product.sizes?.[0] || '')
 const quantity = ref(1)
 
 const cartStore = useCartStore()
@@ -141,12 +156,12 @@ const addToCart = () => {
 
   const item = {
     productId: props.product.id,
-    stock : props.product.stock,
+    stock: props.product.stock,
     name: props.product.name,
     price: props.product.discount_price || props.product.price,
     image: props.product.image,
     color: selectedColor.value,
-    size: selectedSize.value,
+    size: props.product.size,
     quantity: quantity.value,
   }
 
@@ -155,3 +170,8 @@ const addToCart = () => {
   router.push({ name: 'products' })
 }
 </script>
+
+<style scoped>
+/* Optional: Add custom styles for further beauty */
+</style>
+

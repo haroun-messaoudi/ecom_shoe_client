@@ -12,20 +12,28 @@
         :class="{ 'opacity-60': product.stock === 0 }"
       />
 
-      <!-- "New" Badge -->
-      <span
-        v-if="product.isNew"
-        class="absolute top-2 left-2 bg-green-500 text-white text-xs font-semibold px-2 py-1 rounded-full shadow-sm"
-      >
-        New
-      </span>
-
       <!-- "Out of Stock" Badge -->
       <span
         v-if="product.stock === 0"
         class="absolute top-2 right-2 bg-red-600 text-white text-xs font-semibold px-2 py-1 rounded-full shadow-sm"
       >
         Out of Stock
+      </span>
+
+      <!-- "New" Badge -->
+      <span
+        v-else-if="product.isNew"
+        class="absolute top-2 left-2 bg-lime-500 border-2 border-white text-white text-xs font-bold px-3 py-1 rounded-full shadow z-20"
+      >
+        New
+      </span>
+
+      <!-- "Sale" Badge -->
+      <span
+        v-else-if="product.discount_price"
+        class="absolute top-2 right-2 bg-orange-500 text-white text-xs font-semibold px-2 py-1 rounded-full shadow-sm z-10"
+      >
+        Sale
       </span>
     </div>
 

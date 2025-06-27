@@ -38,8 +38,12 @@ export const useProductStore = defineStore('product', {
       this.error = null
       try {
         const res = await axios.get(`${BASE_URL}/new-products/`, { params })
-        this.newProducts = res.data
-        this.newCount = res.data.count
+        // Add isNew: true to each product
+        this.newProducts = (res.data.results || res.data).map(product => ({
+          ...product,
+          isNew: true,
+        }))
+        this.newCount = res.data.count ?? this.newProducts.length
       } catch (err) {
         this.error = 'Failed to load new products.'
       } finally {
