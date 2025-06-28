@@ -20,7 +20,7 @@ export const useSearchStore = defineStore('search', {
       this.loading = true
       this.error = null
       try {
-        const response = await axios.get('https://ecom-1qve.onrender.com/api/products/category/list')
+        const response = await axios.get('https://ecom-shoe-b2nx.onrender.com/api/products/category/list')
         this.categories = response.data
       } catch {
         this.error = 'Failed to fetch categories.'
@@ -55,7 +55,7 @@ export const useSearchStore = defineStore('search', {
         if (!query.page && this.page)
           query.page = this.page
 
-        const response = await axios.get('https://ecom-1qve.onrender.com/api/products/list', {
+        const response = await axios.get('https://ecom-shoe-b2nx.onrender.com/api/products/list', {
           params: query,
         })
 

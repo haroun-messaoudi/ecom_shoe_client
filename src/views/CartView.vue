@@ -47,13 +47,14 @@
         <div
           v-if="cartStore.items.length > 0"
           v-for="item in cartStore.items"
-          :key="item.productId"
+          :key="item.productId + '-' + item.variantId"
           class="flex flex-col sm:flex-row sm:items-center gap-4 border-b pb-4"
         >
           <img :src="item.image" :alt="item.name" class="w-24 h-24 rounded-xl object-cover" />
           <div class="flex-1">
             <h3 class="text-lg font-semibold text-gray-800 flex items-center justify-between">
               {{ item.name }}
+              <span v-if="item.size" class="ml-2 text-sm text-gray-500 font-normal">| Size: {{ item.size }}</span>
               <button
                 @click="confirmRemove(item.productId)"
                 class="text-red-500 hover:text-red-700 ml-4"
@@ -294,12 +295,12 @@ async function submitOrder() {
       wilaya: selectedState.value?.id,
       commune: deliveryType.value === 'home' ? selectedCommune.value?.id : null,
       items: cartStore.items.map(i => ({
-        product: i.productId,
-        quantity: i.quantity
+        product_variant: i.variantId, // <-- use variantId
+        quantity: i.quantity,
       }))
     }
 
-    const response = await axios.post('https://ecom-1qve.onrender.com/api/orders/create', payload)
+    const response = await axios.post('https://ecom-shoe-b2nx.onrender.com/api/orders/create', payload)
     toast.success('Your order was placed successfully!')
     submitting.value = false
     orderSuccess.value = true // <-- Show success SVG

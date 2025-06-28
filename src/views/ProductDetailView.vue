@@ -17,7 +17,7 @@ onMounted(async () => {
   loading.value = true
   error.value   = ''
   try {
-    const res = await axios.get(`https://ecom-1qve.onrender.com/api/products/${productId}`)
+    const res = await axios.get(`https://ecom-shoe-b2nx.onrender.com/api/products/${productId}`)
     product.value = res.data
   } catch (e) {
     console.error('Error fetching product:', e)

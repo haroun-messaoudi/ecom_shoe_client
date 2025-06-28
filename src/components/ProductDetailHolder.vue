@@ -6,7 +6,6 @@
         <Card class="w-full">
           <template #content>
             <div class="flex flex-col">
-              <!-- Main Image -->
               <div class="bg-white rounded-xl shadow mb-6 flex items-center justify-center min-h-[350px]">
                 <img
                   v-if="mainImage"
@@ -17,8 +16,6 @@
                   style="max-width: 100%;"
                 />
               </div>
-
-              <!-- Thumbnails -->
               <div
                 v-if="product.images && product.images.length > 1"
                 class="flex gap-3 overflow-x-auto pb-2 bg-gray-50 rounded-lg px-3 py-2 shadow-inner"
@@ -56,7 +53,6 @@
 
               <Divider />
 
-              <!-- Price & Promo -->
               <div class="flex items-center gap-3 flex-wrap">
                 <span
                   v-if="product.discount_price"
@@ -72,49 +68,27 @@
 
               <Divider />
 
-              <!-- Size & Stock -->
-              <div class="flex flex-wrap gap-6 items-center">
-                <div v-if="product.size" class="flex items-center gap-2">
-                  <i class="pi pi-tag text-orange-500"></i>
-                  <span class="font-medium text-gray-700">Size:</span>
-                  <Tag
-                    :value="product.size"
-                    class="bg-orange-100 text-orange-600 border-none"
-                  />
-                </div>
-
-                <div class="flex items-center gap-2">
-                  <i class="pi pi-box text-gray-500"></i>
-                  <span class="font-medium text-gray-700">In Stock:</span>
-                  <Tag
-                    :value="product.stock"
-                    :severity="product.stock === 0 ? 'danger' : 'info'"
-                    class="font-semibold"
-                  />
-                </div>
-              </div>
-
-              <!-- Colors -->
-              <div v-if="product.colors?.length">
-                <span class="font-medium text-gray-700">Color:</span>
-                <div class="flex gap-2 mt-2 flex-wrap">
-                  <Button
-                    v-for="color in product.colors"
-                    :key="color"
-                    @click="selectedColor = color"
-                    :style="{
-                      background: color,
-                      borderColor: selectedColor === color ? '#fb923c' : '#d1d5db',
-                    }"
-                    class="w-8 h-8 p-0 border-2 rounded-full shadow-none"
-                    :outlined="selectedColor !== color"
-                  />
+              <div class="space-y-2">
+                <div v-if="product.variants?.length" class="flex flex-col gap-2">
+                  <span class="text-gray-700 font-medium">Choose Size:</span>
+                  <div class="flex gap-2 flex-wrap">
+                    <Button
+                      v-for="variant in product.variants"
+                      :key="variant.id"
+                      :label="variant.size"
+                      :disabled="variant.stock === 0"
+                      @click="selectVariant(variant)"
+                      :class="selectedVariant?.id === variant.id ? 'p-button-warning' : 'p-button-outlined'"
+                    />
+                  </div>
+                  <div v-if="selectedVariant" class="text-sm text-gray-600">
+                    Available stock: {{ selectedVariant.stock }}
+                  </div>
                 </div>
               </div>
 
               <Divider />
 
-              <!-- Quantity and Add to Cart -->
               <div class="flex flex-col sm:flex-row sm:gap-12 sm:items-center gap-4 pt-4">
                 <div class="flex items-center gap-2">
                   <label for="quantity" class="text-gray-700 font-medium">Quantity:</label>
@@ -122,22 +96,21 @@
                     id="quantity"
                     v-model="quantity"
                     :min="1"
-                    :max="product.stock"
+                    :max="selectedVariant?.stock || 1"
                     showButtons
                     buttonLayout="horizontal"
                     decrementButtonClass="p-button-text"
                     incrementButtonClass="p-button-text"
-                    :disabled="product.stock === 0"
+                    :disabled="!selectedVariant"
                     class="w-28"
                     :inputStyle="{ width: '60px' }"
                   />
                 </div>
 
                 <Button
-                  :label="product.stock === 0 ? 'Out of Stock' : 'Add to Cart'"
-                  :disabled="product.stock === 0"
-                  class="w-full sm:w-auto px-6 py-3 rounded-full text-lg font-medium"
-                  :class="product.stock === 0 ? 'p-button-secondary' : 'p-button-warning'"
+                  label="Add to Cart"
+                  :disabled="!selectedVariant || selectedVariant.stock === 0"
+                  class="w-full sm:w-auto px-6 py-3 rounded-full text-lg font-medium p-button-warning"
                   @click="addToCart"
                 />
               </div>
@@ -149,8 +122,6 @@
   </div>
 </template>
 
-
-
 <script setup>
 import { ref, watch } from 'vue'
 import { useCartStore } from '@/stores/cart'
@@ -158,7 +129,6 @@ import { useRouter } from 'vue-router'
 import { toast } from 'vue3-toastify'
 import 'vue3-toastify/dist/index.css'
 
-// PrimeVue components
 import Card from 'primevue/card'
 import Divider from 'primevue/divider'
 import Tag from 'primevue/tag'
@@ -172,7 +142,7 @@ const props = defineProps({
   },
 })
 
-const selectedColor = ref(props.product.colors?.[0] || '')
+const selectedVariant = ref(null)
 const quantity = ref(1)
 const mainImage = ref(null)
 
@@ -183,11 +153,12 @@ watch(
   () => props.product,
   (newProduct) => {
     if (newProduct && Array.isArray(newProduct.images) && newProduct.images.length > 0) {
-      // Prefer is_main, else first image
       mainImage.value = newProduct.images.find(img => img.is_main) || newProduct.images[0]
     } else {
       mainImage.value = null
     }
+    selectedVariant.value = null
+    quantity.value = 1
   },
   { immediate: true }
 )
@@ -196,49 +167,54 @@ function selectMainImage(img) {
   mainImage.value = img
 }
 
-const addToCart = () => {
+function selectVariant(variant) {
+  selectedVariant.value = variant
+  quantity.value = 1
+}
+
+function getOptimizedImage(url) {
+  if (!url.includes('res.cloudinary.com')) return url
+  const parts = url.split('/upload/')
+  return `${parts[0]}/upload/f_auto,q_auto,w_600,h_500,c_pad,b_white/${parts[1]}`
+}
+
+function addToCart() {
+  if (!selectedVariant.value) {
+    toast.warning('Please select a size.')
+    return
+  }
   if (quantity.value < 1) {
     toast.warning('Quantity must be at least 1')
     return
   }
 
-  const existing = cartStore.items.find(i => i.productId === props.product.id)
+  const existing = cartStore.items.find(i => i.variantId === selectedVariant.value.id)
   const currentQty = existing?.quantity || 0
   const newTotalQty = currentQty + quantity.value
 
-  if (newTotalQty > props.product.stock) {
-    toast.error(`You already have ${currentQty} in cart. Only ${props.product.stock} in stock.`)
+  if (newTotalQty > selectedVariant.value.stock) {
+    toast.error(`You already have ${currentQty} in cart. Only ${selectedVariant.value.stock} in stock.`)
     return
   }
 
   const item = {
     productId: props.product.id,
-    stock: props.product.stock,
+    variantId: selectedVariant.value.id,
+    size: selectedVariant.value.size,
+    stock: selectedVariant.value.stock,
     name: props.product.name,
     price: props.product.discount_price || props.product.price,
-    image: mainImage.value?.image || '', // <-- Use the main image from the gallery
-    color: selectedColor.value,
-    size: props.product.size,
+    image: mainImage.value?.image || '',
     quantity: quantity.value,
   }
 
   cartStore.addItem(item)
-  toast.success(`${props.product.name} x${quantity.value} added to cart`)
+  toast.success(`${props.product.name} (Size: ${item.size}) x${quantity.value} added to cart`)
   router.push({ name: 'products' })
 }
-
-function getOptimizedImage(url) {
-  if (!url.includes('res.cloudinary.com')) return url
-
-  const parts = url.split('/upload/')
-  return `${parts[0]}/upload/f_auto,q_auto,w_600,h_500,c_pad,b_white/${parts[1]}`
-}
-
-
 </script>
 
 <style scoped>
-/* Optional: Add custom styles for further beauty */
 .bg-gray-50 {
   background-color: #f9fafb;
 }
