@@ -6,9 +6,11 @@
         <Card class="w-full">
           <template #content>
             <img
-              :src="product.image"
+              :src="getOptimizedImage(product.image)"
               :alt="product.name"
               loading="lazy"
+              width="600"
+              height="500"
               class="rounded-xl w-full max-h-[500px] object-contain shadow"
             />
           </template>
@@ -169,6 +171,15 @@ const addToCart = () => {
   toast.success(`${props.product.name} x${quantity.value} added to cart`)
   router.push({ name: 'products' })
 }
+
+function getOptimizedImage(url) {
+  if (!url.includes('res.cloudinary.com')) return url
+
+  const parts = url.split('/upload/')
+  return `${parts[0]}/upload/f_auto,q_auto,w_600,h_500,c_pad,b_white/${parts[1]}`
+}
+
+
 </script>
 
 <style scoped>

@@ -5,9 +5,11 @@
     <!-- Product Image -->
     <div class="relative w-full h-36 overflow-hidden group">
       <img
-        :src="product.image"
+        :src="getOptimizedImage(product.image)"
         :alt="product.name"
         loading="lazy"
+        width="300"
+        height="180"
         class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
         :class="{ 'opacity-60': product.stock === 0 }"
       />
@@ -74,6 +76,14 @@ const props = defineProps({
     }),
   },
 })
+
+function getOptimizedImage(url) {
+  if (!url.includes('res.cloudinary.com')) return url
+
+  const parts = url.split('/upload/')
+  return `${parts[0]}/upload/f_auto,q_auto,w_300,h_180,c_pad,b_white/${parts[1]}`
+}
+
 
 function displayPrice(product) {
   return product.discount_price ?? product.price

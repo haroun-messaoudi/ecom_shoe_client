@@ -43,6 +43,12 @@ function setupScrollAnimations() {
 }
 
 
+function getOptimizedImage(url) {
+  if (!url.includes('res.cloudinary.com')) return url
+
+  const parts = url.split('/upload/')
+  return `${parts[0]}/upload/f_auto,q_auto,w_300,h_200,c_fill/${parts[1]}`
+}
 
 onMounted(async () => {
   await searchStore.fetchCategories()
@@ -135,8 +141,11 @@ watch(
               <!-- Category image -->
               <img
                 v-else-if="cat.image"
-                :src="cat.image"
+                :src="getOptimizedImage(cat.image)"
                 :alt="cat.name"
+                loading="lazy"
+                width="300"
+                height="200"
                 class="w-full h-full object-cover transition-transform group-hover:scale-105"
               />
 
