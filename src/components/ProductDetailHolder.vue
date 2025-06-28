@@ -185,4 +185,3 @@ function getOptimizedImage(url) {
 <style scoped>
 /* Optional: Add custom styles for further beauty */
 </style>
-

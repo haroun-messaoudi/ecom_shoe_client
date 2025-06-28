@@ -6,58 +6,81 @@ const BASE_URL = 'https://ecom-1qve.onrender.com/api/products'
 
 export const useProductStore = defineStore('product', {
   state: () => ({
+    // Discounted Products
     discounted: [],
     discountedCount: 0,
+    discountedNext: null,
+    discountedPrevious: null,
 
+    // New Products
     newProducts: [],
     newCount: 0,
+    newNext: null,
+    newPrevious: null,
 
+    // Top Ordered
     topOrdered: [],
+    topOrderedCount: 0,
+    topOrderedNext: null,
+    topOrderedPrevious: null,
 
+    // Loading and error
     loading: false,
     error: null,
   }),
 
   actions: {
-    async fetchDiscounted(params = {}) {
+    async fetchDiscounted(params = { page: 1, page_size: 8 }) {
       this.loading = true
       this.error = null
       try {
         const res = await axios.get(`${BASE_URL}/discounted/`, { params })
-        this.discounted = res.data
-        this.discountedCount = res.data.count
-      } catch (err) {
+        const data = res.data
+
+        this.discounted = data.results || data
+        this.discountedCount = data.count ?? this.discounted.length
+        this.discountedNext = data.next ?? null
+        this.discountedPrevious = data.previous ?? null
+      } catch {
         this.error = 'Failed to load discounted products.'
       } finally {
         this.loading = false
       }
     },
 
-    async fetchNewProducts(params = {}) {
+    async fetchNewProducts(params = { page: 1, page_size: 8 }) {
       this.loading = true
       this.error = null
       try {
         const res = await axios.get(`${BASE_URL}/new-products/`, { params })
-        // Add isNew: true to each product
-        this.newProducts = (res.data.results || res.data).map(product => ({
+        const data = res.data
+
+        this.newProducts = (data.results || data).map(product => ({
           ...product,
           isNew: true,
         }))
-        this.newCount = res.data.count ?? this.newProducts.length
-      } catch (err) {
+        this.newCount = data.count ?? this.newProducts.length
+        this.newNext = data.next ?? null
+        this.newPrevious = data.previous ?? null
+      } catch {
         this.error = 'Failed to load new products.'
       } finally {
         this.loading = false
       }
     },
 
-    async fetchTopOrdered() {
+    async fetchTopOrdered(params = { page: 1, page_size: 8 }) {
       this.loading = true
       this.error = null
       try {
-        const res = await axios.get(`${BASE_URL}/top-ordered/`)
-        this.topOrdered = res.data
-      } catch (err) {
+        const res = await axios.get(`${BASE_URL}/top-ordered/`, { params })
+        const data = res.data
+
+        this.topOrdered = data.results || data
+        this.topOrderedCount = data.count ?? this.topOrdered.length
+        this.topOrderedNext = data.next ?? null
+        this.topOrderedPrevious = data.previous ?? null
+      } catch {
         this.error = 'Failed to load top ordered products.'
       } finally {
         this.loading = false

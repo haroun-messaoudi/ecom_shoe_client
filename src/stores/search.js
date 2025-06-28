@@ -1,5 +1,5 @@
-import { defineStore } from 'pinia';
-import axios from 'axios';
+import { defineStore } from 'pinia'
+import axios from 'axios'
 
 export const useSearchStore = defineStore('search', {
   state: () => ({
@@ -7,43 +7,81 @@ export const useSearchStore = defineStore('search', {
     selectedCategory: null,
     searchTerm: '',
     results: [],
+    count: 0,
+    next: null,
+    previous: null,
+    page: 1,
     loading: false,
     error: null,
   }),
+
   actions: {
     async fetchCategories() {
-      this.loading = true;
-      this.error = null;
+      this.loading = true
+      this.error = null
       try {
-        const response = await axios.get('https://ecom-1qve.onrender.com/api/products/category/list');
-        this.categories = response.data;
+        const response = await axios.get('https://ecom-1qve.onrender.com/api/products/category/list')
+        this.categories = response.data
       } catch {
-        this.error = 'Failed to fetch categories.';
+        this.error = 'Failed to fetch categories.'
       } finally {
-        this.loading = false;
+        this.loading = false
       }
     },
+
     setCategory(categoryId) {
-      this.selectedCategory = categoryId;
+      this.selectedCategory = categoryId
     },
+
     setSearchTerm(term) {
-      this.searchTerm = term;
+      this.searchTerm = term
     },
-    async searchProducts() {
-      this.loading = true;
-      this.error = null;
+
+    setPage(page) {
+      this.page = page
+    },
+
+    async searchProducts(params = {}) {
+      this.loading = true
+      this.error = null
+
       try {
-        let params = {};
-        if (this.selectedCategory) params.category = this.selectedCategory;
-        if (this.searchTerm) params.search = this.searchTerm;
-        const response = await axios.get('https://ecom-1qve.onrender.com/api/products/list', { params });
-        this.results = response.data;
-        console.log(response);
+        // Build query from provided params or fallback to store state
+        const query = { ...params }
+
+        if (!query.category && this.selectedCategory)
+          query.category = this.selectedCategory
+
+        if (!query.search && this.searchTerm)
+          query.search = this.searchTerm
+
+        if (!query.page && this.page)
+          query.page = this.page
+
+        const response = await axios.get('https://ecom-1qve.onrender.com/api/products/list', {
+          params: query,
+        })
+
+        const data = response.data
+
+        // ✅ Ensure pagination structure is respected
+        if (data && Array.isArray(data.results)) {
+          this.results = data.results
+          this.count = data.count
+          this.next = data.next
+          this.previous = data.previous
+        } else {
+          // Fallback: in case non-paginated data is returned
+          this.results = data
+          this.count = data.length || 0
+          this.next = null
+          this.previous = null
+        }
       } catch {
-        this.error = 'Failed to fetch products.';
+        this.error = 'Failed to fetch products.'
       } finally {
-        this.loading = false;
+        this.loading = false
       }
     },
   },
-}); 
+})
