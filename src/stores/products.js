@@ -36,8 +36,11 @@ export const useProductStore = defineStore('product', {
       try {
         const res = await axios.get(`${BASE_URL}/discounted/`, { params })
         const data = res.data
-
-        this.discounted = data.results || data
+        // Only main image for listings
+        this.discounted = (data.results || data).map(product => ({
+          ...product,
+          image: product.main_image_url // use only main image
+        }))
         this.discountedCount = data.count ?? this.discounted.length
         this.discountedNext = data.next ?? null
         this.discountedPrevious = data.previous ?? null
@@ -54,9 +57,9 @@ export const useProductStore = defineStore('product', {
       try {
         const res = await axios.get(`${BASE_URL}/new-products/`, { params })
         const data = res.data
-
         this.newProducts = (data.results || data).map(product => ({
           ...product,
+          image: product.main_image_url, // use only main image
           isNew: true,
         }))
         this.newCount = data.count ?? this.newProducts.length
@@ -75,8 +78,10 @@ export const useProductStore = defineStore('product', {
       try {
         const res = await axios.get(`${BASE_URL}/top-ordered/`, { params })
         const data = res.data
-
-        this.topOrdered = data.results || data
+        this.topOrdered = (data.results || data).map(product => ({
+          ...product,
+          image: product.main_image_url // use only main image
+        }))
         this.topOrderedCount = data.count ?? this.topOrdered.length
         this.topOrderedNext = data.next ?? null
         this.topOrderedPrevious = data.previous ?? null

@@ -48,13 +48,10 @@ export const useSearchStore = defineStore('search', {
       try {
         // Build query from provided params or fallback to store state
         const query = { ...params }
-
         if (!query.category && this.selectedCategory)
           query.category = this.selectedCategory
-
         if (!query.search && this.searchTerm)
           query.search = this.searchTerm
-
         if (!query.page && this.page)
           query.page = this.page
 
@@ -64,15 +61,20 @@ export const useSearchStore = defineStore('search', {
 
         const data = response.data
 
-        // ✅ Ensure pagination structure is respected
+        // Only main image for listings
         if (data && Array.isArray(data.results)) {
-          this.results = data.results
+          this.results = data.results.map(product => ({
+            ...product,
+            image: product.main_image_url // use only main image
+          }))
           this.count = data.count
           this.next = data.next
           this.previous = data.previous
         } else {
-          // Fallback: in case non-paginated data is returned
-          this.results = data
+          this.results = (data || []).map(product => ({
+            ...product,
+            image: product.main_image_url
+          }))
           this.count = data.length || 0
           this.next = null
           this.previous = null

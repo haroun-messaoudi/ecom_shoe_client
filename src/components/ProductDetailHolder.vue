@@ -1,18 +1,42 @@
 <template>
   <div class="max-w-screen-xl mx-auto px-4 py-8">
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
-      <!-- Product Image -->
-      <div class="flex justify-center items-center">
+      <!-- Product Images Gallery -->
+      <div>
         <Card class="w-full">
           <template #content>
-            <img
-              :src="getOptimizedImage(product.image)"
-              :alt="product.name"
-              loading="lazy"
-              width="600"
-              height="500"
-              class="rounded-xl w-full max-h-[500px] object-contain shadow"
-            />
+            <div class="flex flex-col">
+              <!-- Main Image -->
+              <div class="bg-white rounded-xl shadow mb-6 flex items-center justify-center min-h-[350px]">
+                <img
+                  v-if="mainImage"
+                  :src="getOptimizedImage(mainImage.image)"
+                  :alt="product.name"
+                  loading="lazy"
+                  class="rounded-xl max-h-[400px] object-contain transition-all duration-300"
+                  style="max-width: 100%;"
+                />
+              </div>
+
+              <!-- Thumbnails -->
+              <div
+                v-if="product.images && product.images.length > 1"
+                class="flex gap-3 overflow-x-auto pb-2 bg-gray-50 rounded-lg px-3 py-2 shadow-inner"
+              >
+                <img
+                  v-for="img in product.images"
+                  :key="img.id"
+                  :src="img.image"
+                  :alt="product.name"
+                  class="w-20 h-20 object-contain rounded-lg border cursor-pointer shrink-0 transition-all duration-200 hover:scale-105 hover:shadow-lg"
+                  :class="{
+                    'ring-2 ring-orange-500 border-orange-300': img.id === mainImage.id,
+                    'border-gray-200': img.id !== mainImage.id
+                  }"
+                  @click="selectMainImage(img)"
+                />
+              </div>
+            </div>
           </template>
         </Card>
       </div>
@@ -22,14 +46,22 @@
         <Card class="w-full">
           <template #content>
             <div class="space-y-6">
-              <h1 class="text-2xl md:text-3xl font-bold text-gray-800">{{ product.name }}</h1>
-              <p class="text-gray-600 text-sm md:text-base">{{ product.description }}</p>
+              <h1 class="text-2xl md:text-3xl font-bold text-gray-800">
+                {{ product.name }}
+              </h1>
+
+              <p class="text-gray-600 text-sm md:text-base leading-relaxed">
+                {{ product.description }}
+              </p>
 
               <Divider />
 
               <!-- Price & Promo -->
               <div class="flex items-center gap-3 flex-wrap">
-                <span v-if="product.discount_price" class="text-gray-400 line-through text-xl">
+                <span
+                  v-if="product.discount_price"
+                  class="text-gray-400 line-through text-xl"
+                >
                   {{ product.price }} DA
                 </span>
                 <span class="text-2xl font-bold text-orange-500">
@@ -40,17 +72,18 @@
 
               <Divider />
 
-              <!-- Size -->
-              <div class="flex flew-row gap-4">
-
-                <div v-if="product.size" class="flex items-center gap-2 flex-wrap">
+              <!-- Size & Stock -->
+              <div class="flex flex-wrap gap-6 items-center">
+                <div v-if="product.size" class="flex items-center gap-2">
                   <i class="pi pi-tag text-orange-500"></i>
                   <span class="font-medium text-gray-700">Size:</span>
-                  <Tag :value="product.size" class="bg-orange-100 text-orange-600 border-none" />
+                  <Tag
+                    :value="product.size"
+                    class="bg-orange-100 text-orange-600 border-none"
+                  />
                 </div>
 
-                <!-- Stock -->
-                <div class="flex items-center gap-2 flex-wrap">
+                <div class="flex items-center gap-2">
                   <i class="pi pi-box text-gray-500"></i>
                   <span class="font-medium text-gray-700">In Stock:</span>
                   <Tag
@@ -60,7 +93,8 @@
                   />
                 </div>
               </div>
-              <!-- Color Options -->
+
+              <!-- Colors -->
               <div v-if="product.colors?.length">
                 <span class="font-medium text-gray-700">Color:</span>
                 <div class="flex gap-2 mt-2 flex-wrap">
@@ -81,8 +115,8 @@
               <Divider />
 
               <!-- Quantity and Add to Cart -->
-              <div class="flex flex-col gap-4 pt-4">
-                <div class="flex items-center gap-2 max-w-36">
+              <div class="flex flex-col sm:flex-row sm:gap-12 sm:items-center gap-4 pt-4">
+                <div class="flex items-center gap-2">
                   <label for="quantity" class="text-gray-700 font-medium">Quantity:</label>
                   <InputNumber
                     id="quantity"
@@ -94,10 +128,11 @@
                     decrementButtonClass="p-button-text"
                     incrementButtonClass="p-button-text"
                     :disabled="product.stock === 0"
-                    class="w-full sm:w-32"
+                    class="w-28"
                     :inputStyle="{ width: '60px' }"
                   />
                 </div>
+
                 <Button
                   :label="product.stock === 0 ? 'Out of Stock' : 'Add to Cart'"
                   :disabled="product.stock === 0"
@@ -115,8 +150,9 @@
 </template>
 
 
+
 <script setup>
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { useCartStore } from '@/stores/cart'
 import { useRouter } from 'vue-router'
 import { toast } from 'vue3-toastify'
@@ -138,9 +174,28 @@ const props = defineProps({
 
 const selectedColor = ref(props.product.colors?.[0] || '')
 const quantity = ref(1)
+const mainImage = ref(null)
 
 const cartStore = useCartStore()
 const router = useRouter()
+
+watch(
+  () => props.product,
+  (newProduct) => {
+    if (newProduct && Array.isArray(newProduct.images) && newProduct.images.length > 0) {
+      // Prefer is_main, else first image
+      mainImage.value = newProduct.images.find(img => img.is_main) || newProduct.images[0]
+    } else {
+      mainImage.value = null
+    }
+  },
+  { immediate: true }
+)
+
+function selectMainImage(img) {
+  mainImage.value = img
+}
+
 const addToCart = () => {
   if (quantity.value < 1) {
     toast.warning('Quantity must be at least 1')
@@ -161,7 +216,7 @@ const addToCart = () => {
     stock: props.product.stock,
     name: props.product.name,
     price: props.product.discount_price || props.product.price,
-    image: props.product.image,
+    image: mainImage.value?.image || '', // <-- Use the main image from the gallery
     color: selectedColor.value,
     size: props.product.size,
     quantity: quantity.value,
@@ -184,4 +239,7 @@ function getOptimizedImage(url) {
 
 <style scoped>
 /* Optional: Add custom styles for further beauty */
+.bg-gray-50 {
+  background-color: #f9fafb;
+}
 </style>
