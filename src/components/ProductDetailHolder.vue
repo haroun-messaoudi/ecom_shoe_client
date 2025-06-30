@@ -107,6 +107,13 @@
                   class="w-full sm:w-auto px-6 py-3 rounded-full text-lg font-medium p-button-warning"
                   @click="addToCart"
                 />
+                <Button
+                  label="Buy Now"
+                  v-if="selectedVariant && selectedVariant.stock > 0"
+                  :disabled="!selectedVariant || maxAddable <= 0"
+                  class="w-full sm:w-auto px-6 py-3 rounded-full text-lg font-medium p-button-success"
+                  @click="buyNow"
+                />
               </div>
             </div>
           </template>
@@ -183,7 +190,7 @@ function selectVariant(variant) {
 function getOptimizedImage(url) {
   if (!url.includes('res.cloudinary.com')) return url
   const parts = url.split('/upload/')
-  return `${parts[0]}/upload/f_auto,q_auto,w_600,h_500,c_pad,b_white/${parts[1]}`
+  return `${parts[0]}/upload/f_auto,q_auto,w_800,h_600,c_fit/${parts[1]}`
 }
 
 function addToCart() {
@@ -224,6 +231,46 @@ function addToCart() {
   cartStore.addItem(item)
   toast.success(`${props.product.name} (Size: ${item.size}) x${qty} added to cart`)
   router.push({ name: 'products' })
+}
+
+function buyNow() {
+  if (!selectedVariant.value) {
+    toast.warning('Please select a size.')
+    return
+  }
+
+  const qty = rawQuantity.value
+  if (qty < 1) {
+    toast.warning('Quantity must be at least 1')
+    return
+  }
+  if (qty > selectedVariant.value.stock) {
+    toast.error(`Only ${selectedVariant.value.stock} available for this size.`)
+    return
+  }
+  const existing = cartStore.items.find(i => i.variantId === selectedVariant.value.id)
+  const currentQty = existing?.quantity || 0
+  const newTotalQty = currentQty + qty
+
+  if (newTotalQty > selectedVariant.value.stock) {
+    toast.error(`You already have ${currentQty} in your cart. Only ${selectedVariant.value.stock} available.`)
+    return
+  }
+
+  const item = {
+    productId: props.product.id,
+    variantId: selectedVariant.value.id,
+    size: selectedVariant.value.size,
+    stock: selectedVariant.value.stock,
+    name: props.product.name,
+    price: props.product.discount_price || props.product.price,
+    image: mainImage.value?.image || '',
+    quantity: qty,
+  }
+
+  cartStore.addItem(item)
+  toast.success(`${props.product.name} (Size: ${item.size}) x${qty} added to cart`)
+  router.push({ name: 'cart' }) // Redirect to cart page
 }
 </script>
 
