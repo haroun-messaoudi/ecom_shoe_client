@@ -282,7 +282,7 @@ async function submitOrder() {
       costumer_phone: phone.value,
       delivery_type: deliveryType.value === 'home' ? 'A Domicile' : 'Bureau',
       delivery_fees: deliveryFees.value,
-      wilaya: selectedState.value?.id,
+      wilaya: selectedState.value?.name,
       items: cartStore.items.map(i => ({
         product_variant: i.variantId, // <-- use variantId
         quantity: i.quantity,
