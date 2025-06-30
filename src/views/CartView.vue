@@ -149,7 +149,7 @@
           <!-- Wilaya Dropdown -->
           <Dropdown
             v-model="selectedState"
-            :options="states"
+            :options="wilaya"
             :class="{'p-invalid': errors.selectedState}"
             optionLabel="name"
             placeholder="Select Wilaya"
@@ -158,21 +158,6 @@
           />
           <Message v-if="errors.selectedState" severity="error" class="mt-2 animate-fade-in">
             {{ errors.selectedState }}
-          </Message>
-
-          <!-- Commune Dropdown -->
-          <Dropdown
-            v-model="selectedCommune"
-            :options="communes[selectedState?.code] || []"
-            :class="{'p-invalid': errors.selectedCommune}"
-            optionLabel="name"
-            placeholder="Select Commune"
-            class="w-full sm:w-64 mt-4 mb-2"
-            :disabled="!selectedState || deliveryType !== 'home'"
-            filter
-          />
-          <Message v-if="errors.selectedCommune" severity="error" class="mt-2 animate-fade-in">
-            {{ errors.selectedCommune }}
           </Message>
         </div>
 
@@ -199,6 +184,7 @@ import { RouterLink, useRouter } from 'vue-router'
 import InputText from 'primevue/inputtext'
 import axios from 'axios'
 import Message from 'primevue/message'
+import { yalidinePrices } from '@/assets/delivery/yalidine_prices'
 
 // ✅ Toastify
 import { toast } from 'vue3-toastify'
@@ -212,28 +198,24 @@ const name = ref('')
 const phone = ref('')
 const deliveryType = ref('home')
 const selectedState = ref(null)
-const selectedCommune = ref(null)
 const submitting = ref(false)
 const orderSuccess = ref(false) // <-- Add this
 
 const errors = ref({
   name: '',
   phone: '',
-  selectedState: '',
-  selectedCommune: ''
+  selectedState: ''
+  // selectedCommune: '' <-- REMOVE THIS LINE
 })
 
-const states = [
-  { name: 'Algiers', code: 'ALG', id: 1 },
-  { name: 'Oran', code: 'ORN', id: 2 },
-  { name: 'Constantine', code: 'CON', id: 3 }
-]
+const wilaya = Object.entries(yalidinePrices).map(([name, data]) => ({
+  name,
+  code: data.code,
+  domicile: data.domicile,
+  bureau: data.bureau,
+  id: data.code // or use another unique property if needed
+}))
 
-const communes = {
-  ALG: [ { name: 'Bab El Oued', id: 101 }, { name: 'Hydra', id: 102 }, { name: 'El Harrach', id: 103 } ],
-  ORN: [ { name: 'Bir El Djir', id: 201 }, { name: 'Es Senia', id: 202 } ],
-  CON: [ { name: 'El Khroub', id: 301 }, { name: 'Ali Mendjeli', id: 302 } ]
-}
 
 const totalPrice = computed(() => cartStore.totalPrice)
 
@@ -263,7 +245,7 @@ function confirmOrder() {
 
 function validateForm() {
   let valid = true
-  errors.value = { name: '', phone: '', selectedState: '', selectedCommune: '' }
+  errors.value = { name: '', phone: '', selectedState: '' } // Remove selectedCommune
 
   if (!name.value.trim()) {
     errors.value.name = 'Full name is required'
@@ -277,12 +259,20 @@ function validateForm() {
     errors.value.selectedState = 'Wilaya is required'
     valid = false
   }
-  if (deliveryType.value === 'home' && !selectedCommune.value) {
-    errors.value.selectedCommune = 'Commune is required'
-    valid = false
-  }
+  // REMOVE commune validation
+  // if (deliveryType.value === 'home' && !selectedCommune.value) {
+  //   errors.value.selectedCommune = 'Commune is required'
+  //   valid = false
+  // }
   return valid
 }
+
+const deliveryFees = computed(() => {
+        if (!selectedState.value) return 0
+        return deliveryType.value === 'home'
+          ? selectedState.value.domicile
+          : selectedState.value.bureau
+      })
 
 async function submitOrder() {
   submitting.value = true
@@ -291,9 +281,8 @@ async function submitOrder() {
       costumer_name: name.value,
       costumer_phone: phone.value,
       delivery_type: deliveryType.value === 'home' ? 'A Domicile' : 'Bureau',
-      delivery_fees: deliveryType.value === 'home' ? 500 : 0,
+      delivery_fees: deliveryFees.value,
       wilaya: selectedState.value?.id,
-      commune: deliveryType.value === 'home' ? selectedCommune.value?.id : null,
       items: cartStore.items.map(i => ({
         product_variant: i.variantId, // <-- use variantId
         quantity: i.quantity,
@@ -301,6 +290,7 @@ async function submitOrder() {
     }
 
     const response = await axios.post('https://ecom-shoe-b2nx.onrender.com/api/orders/create', payload)
+    console.log(response)
     toast.success('Your order was placed successfully!')
     submitting.value = false
     orderSuccess.value = true // <-- Show success SVG
