@@ -54,10 +54,7 @@
               <Divider />
 
               <div class="flex items-center gap-3 flex-wrap">
-                <span
-                  v-if="product.discount_price"
-                  class="text-gray-400 line-through text-xl"
-                >
+                <span v-if="product.discount_price" class="text-gray-400 line-through text-xl">
                   {{ product.price }} DA
                 </span>
                 <span class="text-2xl font-bold text-orange-500">
@@ -81,9 +78,7 @@
                       :class="selectedVariant?.id === variant.id ? 'p-button-warning' : 'p-button-outlined'"
                     />
                   </div>
-                  <div v-if="selectedVariant" class="text-sm text-gray-600">
-                    Available stock: {{ selectedVariant.stock }}
-                  </div>
+
                 </div>
               </div>
 
@@ -94,14 +89,13 @@
                   <label for="quantity" class="text-gray-700 font-medium">Quantity:</label>
                   <InputNumber
                     id="quantity"
-                    v-model="quantity"
+                    v-model.number="rawQuantity"
                     :min="1"
-                    :max="selectedVariant?.stock || 1"
                     showButtons
                     buttonLayout="horizontal"
                     decrementButtonClass="p-button-text"
                     incrementButtonClass="p-button-text"
-                    :disabled="!selectedVariant"
+                    :disabled="!selectedVariant || maxAddable <= 0"
                     class="w-28"
                     :inputStyle="{ width: '60px' }"
                   />
@@ -109,7 +103,7 @@
 
                 <Button
                   label="Add to Cart"
-                  :disabled="!selectedVariant || selectedVariant.stock === 0"
+                  :disabled="!selectedVariant || selectedVariant.stock === 0 || maxAddable <= 0"
                   class="w-full sm:w-auto px-6 py-3 rounded-full text-lg font-medium p-button-warning"
                   @click="addToCart"
                 />
@@ -123,7 +117,7 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import { useCartStore } from '@/stores/cart'
 import { useRouter } from 'vue-router'
 import { toast } from 'vue3-toastify'
@@ -143,8 +137,8 @@ const props = defineProps({
 })
 
 const selectedVariant = ref(null)
-const quantity = ref(1)
 const mainImage = ref(null)
+const rawQuantity = ref(1)
 
 const cartStore = useCartStore()
 const router = useRouter()
@@ -158,10 +152,24 @@ watch(
       mainImage.value = null
     }
     selectedVariant.value = null
-    quantity.value = 1
+    rawQuantity.value = 1
   },
   { immediate: true }
 )
+
+// const maxAddable = computed(() => {
+//   if (!selectedVariant.value) return 1
+//   const existing = cartStore.items.find(i => i.variantId === selectedVariant.value.id)
+//   const alreadyInCart = existing?.quantity || 0
+//   return Math.max(selectedVariant.value.stock - alreadyInCart, 0)
+// })
+
+// watch(rawQuantity, (val) => {
+//   if (selectedVariant.value && val > maxAddable.value) {
+//     toast.warning(`Only ${maxAddable.value} left in stock for this size (including what's in your cart).`)
+//     rawQuantity.value = maxAddable.value
+//   }
+// })
 
 function selectMainImage(img) {
   mainImage.value = img
@@ -169,7 +177,7 @@ function selectMainImage(img) {
 
 function selectVariant(variant) {
   selectedVariant.value = variant
-  quantity.value = 1
+  rawQuantity.value = 1
 }
 
 function getOptimizedImage(url) {
@@ -183,17 +191,22 @@ function addToCart() {
     toast.warning('Please select a size.')
     return
   }
-  if (quantity.value < 1) {
+
+  const qty = rawQuantity.value
+  if (qty < 1) {
     toast.warning('Quantity must be at least 1')
     return
   }
-
+  if( qty > selectedVariant.value.stock) {
+    toast.error(`Only ${selectedVariant.value.stock} available for this size.`)
+    return
+  }
   const existing = cartStore.items.find(i => i.variantId === selectedVariant.value.id)
   const currentQty = existing?.quantity || 0
-  const newTotalQty = currentQty + quantity.value
+  const newTotalQty = currentQty + qty
 
   if (newTotalQty > selectedVariant.value.stock) {
-    toast.error(`You already have ${currentQty} in cart. Only ${selectedVariant.value.stock} in stock.`)
+    toast.error(`You already have ${currentQty} in your cart. Only ${selectedVariant.value.stock} available.`)
     return
   }
 
@@ -205,11 +218,11 @@ function addToCart() {
     name: props.product.name,
     price: props.product.discount_price || props.product.price,
     image: mainImage.value?.image || '',
-    quantity: quantity.value,
+    quantity: qty,
   }
 
   cartStore.addItem(item)
-  toast.success(`${props.product.name} (Size: ${item.size}) x${quantity.value} added to cart`)
+  toast.success(`${props.product.name} (Size: ${item.size}) x${qty} added to cart`)
   router.push({ name: 'products' })
 }
 </script>
