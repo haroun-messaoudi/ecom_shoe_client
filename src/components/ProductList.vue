@@ -54,8 +54,7 @@ const scrollRight = () => {
           :key="index"
           :to="{
             name: 'productDetail',
-            params: { id: product.id },
-            state: { product }
+            params: { id: product.id }
           }"
           class="block"
         >
