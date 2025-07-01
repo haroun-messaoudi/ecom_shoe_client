@@ -22,7 +22,7 @@ export const useSearchStore = defineStore('search', {
       this.loading = true
       this.error = null
       try {
-        const response = await axios.get('http://127.0.0.1:8000/api/products/category/list')
+        const response = await axios.get('https://ecom-shoe-b2nx.onrender.com/api/products/category/list')
         this.categories = response.data
         this.categoriesLoaded = true
       } catch {
@@ -63,7 +63,7 @@ export const useSearchStore = defineStore('search', {
           ...params
         }
 
-        const response = await axios.get('http://127.0.0.1:8000/api/products/list', {
+        const response = await axios.get('https://ecom-shoe-b2nx.onrender.com/api/products/list', {
           params: query,
         })
 
