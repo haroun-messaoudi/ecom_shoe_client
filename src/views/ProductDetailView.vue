@@ -1,39 +1,28 @@
-<!-- src/views/ProductDetail.vue -->
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import axios from 'axios'
 import ProductDetailHolder from '@/components/ProductDetailHolder.vue'
 
-const route     = useRoute()
+const route = useRoute()
 const productId = route.params.id
 
-// Use product from router state if available
-const initialProduct = history.state?.product || null
-
-const product = ref(initialProduct)
-const loading = ref(!initialProduct)
-const error   = ref('')
+const product = ref(null)
+const loading = ref(true)
+const error = ref('')
 const loadingExtras = ref(true)
 
-// Fetch the product detail on mount
-onMounted(async () => {
-  // If no initial product (e.g., direct link), fetch main info
-  if (!product.value) {
-    loading.value = true
-    error.value   = ''
-    try {
-      const res = await axios.get(`https://ecom-shoe-b2nx.onrender.com/api/products/${productId}`)
-      product.value = res.data
-    } catch (e) {
-      console.error('Error fetching product:', e)
-      error.value = 'Failed to load product details.'
-    } finally {
-      loading.value = false
-    }
+async function fetchProductDetails() {
+  try {
+    const res = await axios.get(`https://ecom-shoe-b2nx.onrender.com/api/products/${productId}/`)
+    product.value = res.data
+  } catch (e) {
+    console.error('Error fetching full product:', e)
+    error.value = 'Failed to load product details.'
   }
+}
 
-  // Fetch images and variants (extras)
+async function fetchProductExtras() {
   try {
     const res = await axios.get(`https://ecom-shoe-b2nx.onrender.com/api/products/${productId}/extras/`)
     product.value = {
@@ -42,12 +31,35 @@ onMounted(async () => {
       variants: res.data.variants,
     }
   } catch (e) {
-    error.value = 'Failed to load product images/variants.'
+    console.warn('Extras failed, continuing with base data:', e)
+    // Don't overwrite existing product
   } finally {
     loadingExtras.value = false
   }
+}
+
+onMounted(async () => {
+  const routerStateProduct = history.state?.product
+
+  if (
+    routerStateProduct &&
+    routerStateProduct.id &&
+    routerStateProduct.name &&
+    routerStateProduct.price
+  ) {
+    product.value = routerStateProduct
+    loading.value = false
+  } else {
+    await fetchProductDetails()
+    loading.value = false
+  }
+
+  if (product.value) {
+    await fetchProductExtras()
+  }
 })
 </script>
+
 
 <template>
   <div class="max-w-screen-xl mx-auto px-4 py-8">
