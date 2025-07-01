@@ -8,22 +8,43 @@ import ProductDetailHolder from '@/components/ProductDetailHolder.vue'
 const route     = useRoute()
 const productId = route.params.id
 
-const product = ref(null)
-const loading = ref(true)
+// Use product from router state if available
+const initialProduct = history.state?.product || null
+
+const product = ref(initialProduct)
+const loading = ref(!initialProduct)
 const error   = ref('')
+const loadingExtras = ref(true)
 
 // Fetch the product detail on mount
 onMounted(async () => {
-  loading.value = true
-  error.value   = ''
+  // If no initial product (e.g., direct link), fetch main info
+  if (!product.value) {
+    loading.value = true
+    error.value   = ''
+    try {
+      const res = await axios.get(`https://ecom-shoe-b2nx.onrender.com/api/products/${productId}`)
+      product.value = res.data
+    } catch (e) {
+      console.error('Error fetching product:', e)
+      error.value = 'Failed to load product details.'
+    } finally {
+      loading.value = false
+    }
+  }
+
+  // Fetch images and variants (extras)
   try {
-    const res = await axios.get(`https://ecom-shoe-b2nx.onrender.com/api/products/${productId}`)
-    product.value = res.data
+    const res = await axios.get(`https://ecom-shoe-b2nx.onrender.com/api/products/${productId}/extras/`)
+    product.value = {
+      ...product.value,
+      images: res.data.images,
+      variants: res.data.variants,
+    }
   } catch (e) {
-    console.error('Error fetching product:', e)
-    error.value = 'Failed to load product details.'
+    error.value = 'Failed to load product images/variants.'
   } finally {
-    loading.value = false
+    loadingExtras.value = false
   }
 })
 </script>
@@ -70,7 +91,7 @@ onMounted(async () => {
     </div>
 
     <!-- ✅ Product Detail Display -->
-    <ProductDetailHolder v-else :product="product" />
+    <ProductDetailHolder v-else :product="product" :loading-extras="loadingExtras" />
   </div>
 </template>
 

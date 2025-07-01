@@ -13,9 +13,13 @@
       <!-- Product Results -->
       <RouterLink
         v-else
-        v-for="product in products"
-        :key="product.id"
-        :to="{ name: 'productDetail', params: { id: product.id } }"
+        v-for="(product, index) in products"
+        :key="index"
+        :to="{
+          name: 'productDetail',
+          params: { id: product.id },
+          state: { product }
+        }"
         class="block"
       >
         <ProductCard :product="product" />

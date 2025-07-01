@@ -52,7 +52,11 @@ const scrollRight = () => {
         <RouterLink
           v-for="(product, index) in products"
           :key="index"
-          :to="{ name: 'productDetail', params: { id: product.id } }"
+          :to="{
+            name: 'productDetail',
+            params: { id: product.id },
+            state: { product }
+          }"
           class="block"
         >
           <ProductCard :product="product" />
@@ -80,7 +84,11 @@ const scrollRight = () => {
         <RouterLink
           v-for="(product, index) in products"
           :key="index"
-          :to="{ name: 'productDetail', params: { id: product.id } }"
+          :to="{
+            name: 'productDetail',
+            params: { id: product.id },
+            state: { product }
+          }"
           class="block flex-shrink-0 w-[210px]"
         >
           <ProductCard :product="product" />

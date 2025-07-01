@@ -141,6 +141,7 @@ const props = defineProps({
     type: Object,
     required: true,
   },
+  loadingExtras: { type: Boolean, default: false }
 })
 
 const selectedVariant = ref(null)
