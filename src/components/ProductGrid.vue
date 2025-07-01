@@ -1,4 +1,3 @@
-// ProductGrid.vue
 <template>
   <section class="max-w-screen-xl mx-auto px-4 py-6">
     <h2 v-if="title" class="text-xl font-bold text-gray-800 mb-4">{{ title }}</h2>
@@ -22,9 +21,6 @@ import ProductCard from './ProductCard.vue'
 
 const props = defineProps({
   title: String,
-  products: {
-    type: Array,
-    default: () => [],
-  },
+  products: Array,
 })
 </script>

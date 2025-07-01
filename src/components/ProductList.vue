@@ -67,12 +67,3 @@ const scrollRight = () => {
     </div>
   </div>
 </template>
-
-<style scoped>
-.hide-scrollbar {
-  scrollbar-width: none;
-}
-.hide-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-</style>

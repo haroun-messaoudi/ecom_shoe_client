@@ -13,15 +13,18 @@ export const useSearchStore = defineStore('search', {
     page: 1,
     loading: false,
     error: null,
+    categoriesLoaded: false,
   }),
 
   actions: {
     async fetchCategories() {
+      if (this.categoriesLoaded || this.loading) return
       this.loading = true
       this.error = null
       try {
-        const response = await axios.get('https://ecom-shoe-b2nx.onrender.com/api/products/category/list')
+        const response = await axios.get('http://127.0.0.1:8000/api/products/category/list')
         this.categories = response.data
+        this.categoriesLoaded = true
       } catch {
         this.error = 'Failed to fetch categories.'
       } finally {
@@ -30,15 +33,21 @@ export const useSearchStore = defineStore('search', {
     },
 
     setCategory(categoryId) {
-      this.selectedCategory = categoryId
+      if (this.selectedCategory !== categoryId) {
+        this.selectedCategory = categoryId
+      }
     },
 
     setSearchTerm(term) {
-      this.searchTerm = term
+      if (this.searchTerm !== term) {
+        this.searchTerm = term
+      }
     },
 
     setPage(page) {
-      this.page = page
+      if (this.page !== page) {
+        this.page = page
+      }
     },
 
     async searchProducts(params = {}) {
@@ -46,39 +55,28 @@ export const useSearchStore = defineStore('search', {
       this.error = null
 
       try {
-        // Build query from provided params or fallback to store state
-        const query = { ...params }
-        if (!query.category && this.selectedCategory)
-          query.category = this.selectedCategory
-        if (!query.search && this.searchTerm)
-          query.search = this.searchTerm
-        if (!query.page && this.page)
-          query.page = this.page
+        const query = {
+          category: this.selectedCategory || undefined,
+          search: this.searchTerm || undefined,
+          page: this.page,
+          page_size: 12,
+          ...params
+        }
 
-        const response = await axios.get('https://ecom-shoe-b2nx.onrender.com/api/products/list', {
+        const response = await axios.get('http://127.0.0.1:8000/api/products/list', {
           params: query,
         })
 
         const data = response.data
 
-        // Only main image for listings
-        if (data && Array.isArray(data.results)) {
-          this.results = data.results.map(product => ({
-            ...product,
-            image: product.main_image_url // use only main image
-          }))
-          this.count = data.count
-          this.next = data.next
-          this.previous = data.previous
-        } else {
-          this.results = (data || []).map(product => ({
-            ...product,
-            image: product.main_image_url
-          }))
-          this.count = data.length || 0
-          this.next = null
-          this.previous = null
-        }
+        this.results = (data.results || data || []).map(product => ({
+          ...product,
+          image: product.main_image_url
+        }))
+
+        this.count = data.count || this.results.length
+        this.next = data.next ?? null
+        this.previous = data.previous ?? null
       } catch {
         this.error = 'Failed to fetch products.'
       } finally {

@@ -1,20 +1,16 @@
 <template>
-  <div
-    class="bg-white rounded-2xl shadow-md hover:shadow-lg transition-shadow overflow-hidden w-full max-w-xs border border-gray-100 hover:border-orange-400 flex flex-col h-80 relative"
-  >
+  <div class="bg-white rounded-2xl shadow-md hover:shadow-lg transition-shadow overflow-hidden w-full max-w-xs border border-gray-100 hover:border-orange-400 flex flex-col h-80 relative card">
     <!-- Product Image -->
-    <div
-      class="relative w-full flex-1 min-h-[200px] sm:min-h-[220px] md:min-h-[240px] overflow-hidden group flex items-center justify-center"
-    >
+    <div class="relative w-full flex-1 min-h-[200px] sm:min-h-[220px] md:min-h-[240px] overflow-hidden group flex items-center justify-center">
       <img
-      :src="getOptimizedImage(product.image)"
-      :alt="product.name"
-      loading="lazy"
-      width="600"
-      height="400"
-      class="w-full h-auto object-contain group-hover:scale-105 transition-transform duration-300 max-w-full max-h-full"
-      :class="{ 'opacity-60': product.stock === 0 }"
-    />
+        :src="product.image"
+        :alt="product.name"
+        loading="lazy"
+        width="600"
+        height="400"
+        class="w-full h-auto object-contain group-hover:scale-105 transition-transform duration-300 max-w-full max-h-full"
+        :class="{'opacity-60': product.stock === 0}"
+      />
 
       <!-- "Out of Stock" Badge -->
       <span
@@ -50,7 +46,7 @@
       <!-- Price -->
       <div class="mt-auto pt-2 space-x-2">
         <span class="text-base font-bold text-orange-500">
-          {{ displayPrice(product).toLocaleString() }} DA
+          {{ formattedPrice }} DA
         </span>
         <span
           v-if="product.discount_price"
@@ -64,6 +60,8 @@
 </template>
 
 <script setup>
+import { computed } from 'vue'
+
 const props = defineProps({
   product: {
     type: Object,
@@ -75,19 +73,20 @@ const props = defineProps({
       discount_price: null,
       isNew: false,
       stock: 0,
-    }),
-  },
+    })
+  }
 })
 
-function getOptimizedImage(url) {
-  if (!url.includes('res.cloudinary.com')) return url
-
-  const parts = url.split('/upload/')
-  return `${parts[0]}/upload/f_auto,q_auto,w_600,h_400,c_fit/${parts[1]}`
-}
-
-
-function displayPrice(product) {
-  return product.discount_price ?? product.price
-}
+const formattedPrice = computed(() => {
+  return (props.product.discount_price ?? props.product.price).toLocaleString()
+})
 </script>
+
+<style scoped>
+.line-clamp-2 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+</style>

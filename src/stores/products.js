@@ -1,45 +1,37 @@
-// src/stores/products.js
 import { defineStore } from 'pinia'
 import axios from 'axios'
-
-const BASE_URL = 'https://ecom-shoe-b2nx.onrender.com/api/products'
+const BASE_URL = 'http://127.0.0.1:8000/api/products'
 
 export const useProductStore = defineStore('product', {
   state: () => ({
-    // Discounted Products
     discounted: [],
-    discountedCount: 0,
-    discountedNext: null,
-    discountedPrevious: null,
-
-    // New Products
     newProducts: [],
-    newCount: 0,
-    newNext: null,
-    newPrevious: null,
-
-    // Top Ordered
     topOrdered: [],
+    discountedCount: 0,
+    newCount: 0,
     topOrderedCount: 0,
+    discountedNext: null,
+    newNext: null,
     topOrderedNext: null,
+    discountedPrevious: null,
+    newPrevious: null,
     topOrderedPrevious: null,
-
-    // Loading and error
-    loading: false,
+    loadingTopOrdered: false,
+    loadingDiscounted: false,
+    loadingNewProducts: false,
     error: null,
   }),
 
   actions: {
     async fetchDiscounted(params = { page: 1, page_size: 8 }) {
-      this.loading = true
+      this.loadingDiscounted = true
       this.error = null
       try {
         const res = await axios.get(`${BASE_URL}/discounted/`, { params })
         const data = res.data
-        // Only main image for listings
-        this.discounted = (data.results || data).map(product => ({
-          ...product,
-          image: product.main_image_url // use only main image
+        this.discounted = (data.results || data).map(p => ({
+          ...p,
+          image: p.main_image_url
         }))
         this.discountedCount = data.count ?? this.discounted.length
         this.discountedNext = data.next ?? null
@@ -47,20 +39,20 @@ export const useProductStore = defineStore('product', {
       } catch {
         this.error = 'Failed to load discounted products.'
       } finally {
-        this.loading = false
+        this.loadingDiscounted = false
       }
     },
 
     async fetchNewProducts(params = { page: 1, page_size: 8 }) {
-      this.loading = true
+      this.loadingNewProducts = true
       this.error = null
       try {
         const res = await axios.get(`${BASE_URL}/new-products/`, { params })
         const data = res.data
-        this.newProducts = (data.results || data).map(product => ({
-          ...product,
-          image: product.main_image_url, // use only main image
-          isNew: true,
+        this.newProducts = (data.results || data).map(p => ({
+          ...p,
+          image: p.main_image_url,
+          isNew: true
         }))
         this.newCount = data.count ?? this.newProducts.length
         this.newNext = data.next ?? null
@@ -68,19 +60,19 @@ export const useProductStore = defineStore('product', {
       } catch {
         this.error = 'Failed to load new products.'
       } finally {
-        this.loading = false
+        this.loadingNewProducts = false
       }
     },
 
     async fetchTopOrdered(params = { page: 1, page_size: 8 }) {
-      this.loading = true
+      this.loadingTopOrdered = true
       this.error = null
       try {
         const res = await axios.get(`${BASE_URL}/top-ordered/`, { params })
         const data = res.data
-        this.topOrdered = (data.results || data).map(product => ({
-          ...product,
-          image: product.main_image_url // use only main image
+        this.topOrdered = (data.results || data).map(p => ({
+          ...p,
+          image: p.main_image_url
         }))
         this.topOrderedCount = data.count ?? this.topOrdered.length
         this.topOrderedNext = data.next ?? null
@@ -88,7 +80,7 @@ export const useProductStore = defineStore('product', {
       } catch {
         this.error = 'Failed to load top ordered products.'
       } finally {
-        this.loading = false
+        this.loadingTopOrdered = false
       }
     },
   },

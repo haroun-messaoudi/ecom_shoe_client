@@ -9,10 +9,14 @@ import ToastContainer from 'vue3-toastify'
     <ToastContainer />
     <NavBar />
 
-    <!-- Smooth fade transition between pages -->
-    <transition name="fade" mode="out-in" appear>
-      <RouterView :key="$route.fullPath" />
-    </transition>
+    <!-- Wrap the view in KeepAlive selectively -->
+    <RouterView v-slot="{ Component, route }">
+      <transition name="fade" mode="out-in" appear>
+        <KeepAlive include="home">
+          <component :is="Component" :key="route.fullPath" />
+        </KeepAlive>
+      </transition>
+    </RouterView>
   </div>
 </template>
 

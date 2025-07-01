@@ -13,7 +13,7 @@ import Toast         from 'primevue/toast'
 import ConfirmDialog from 'primevue/confirmdialog'
 import {MotionPlugin} from '@vueuse/motion'
 import { definePreset } from '@primevue/themes'
-
+import VueLazyLoad from 'vue3-lazyload'
 const app = createApp(App)
 
 const myPreset = definePreset(Lara, {
@@ -173,6 +173,15 @@ app.use(PrimeVue, {
     }
   },
 })
+app.use(VueLazyLoad, {
+  loading: '/placeholder.jpg', 
+  error: '/error.jpg',             
+  observerOptions: {
+    rootMargin: '0px',
+    threshold: 0.1,
+  }
+})
+
 app.use(ToastService)
 app.use(ConfirmationService)
 app.use(MotionPlugin) 

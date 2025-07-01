@@ -28,7 +28,11 @@ function goToCategory(cat) {
   router.push({ name: 'products', query: { category: cat.id === 0 ? '' : cat.id } })
 }
 
+let observerInitialized = false
 function setupScrollAnimations() {
+  if (observerInitialized) return
+  observerInitialized = true
+
   const observer = new IntersectionObserver((entries) => {
     entries.forEach((entry) => {
       if (entry.isIntersecting) {
@@ -42,7 +46,6 @@ function setupScrollAnimations() {
   })
 }
 
-
 function getOptimizedImage(url) {
   if (!url.includes('res.cloudinary.com')) return url
 
@@ -54,9 +57,11 @@ onMounted(async () => {
   await searchStore.fetchCategories()
   categories.value = [{ id: 0, name: 'All', image: null }, ...searchStore.categories]
 
-  productStore.fetchTopOrdered()
-  productStore.fetchDiscounted()
-  productStore.fetchNewProducts()
+  await Promise.all([
+    productStore.fetchTopOrdered(),
+    productStore.fetchDiscounted(),
+    productStore.fetchNewProducts()
+  ])
 
   setupScrollAnimations()
 })

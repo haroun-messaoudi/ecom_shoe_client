@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import ProductGrid from '../components/ProductGrid.vue'
+import ProductGrid from '@/components/ProductGrid.vue'
 import { useSearchStore } from '@/stores/search'
 
 const route = useRoute()
@@ -38,14 +38,13 @@ function goToCategory(cat) {
   router.push({ name: 'products', query })
 }
 
-const fetchPage = () => {
-  searchStore.searchProducts({
+const fetchPage = async () => {
+  await searchStore.searchProducts({
     page: currentPage.value,
     page_size: pageSize,
   })
 }
 
-// Watch for route changes
 watch(
   () => route.query,
   async q => {
@@ -53,28 +52,26 @@ watch(
     searchStore.setCategory(q.category ? Number(q.category) : null)
     categoryId.value = q.category ? Number(q.category) : null
     const page = Number(q.page || 1)
-    currentPage.value = page
+    if (page !== currentPage.value) currentPage.value = page
     searchStore.setPage(page)
     await fetchPage()
   },
   { immediate: true }
 )
 
-// Watch for local page changes
-watch(currentPage, (val) => {
+watch(currentPage, async val => {
   searchStore.setPage(val)
   const query = { ...route.query, page: val }
   router.replace({ name: route.name, query })
-  fetchPage()
+  await fetchPage()
 })
 
-// Sync store.page with local ref (just in case)
 watch(() => searchStore.page, (val) => {
-  currentPage.value = val
+  if (val !== currentPage.value) currentPage.value = val
 })
 
 onMounted(async () => {
-  await searchStore.fetchCategories()
+  if (!searchStore.categories.length) await searchStore.fetchCategories()
 })
 </script>
 
@@ -202,7 +199,7 @@ onMounted(async () => {
             Next →
           </button>
         </div>
-</Transition>
+      </Transition>
     </div>
   </div>
 </template>
