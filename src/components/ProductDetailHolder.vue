@@ -69,7 +69,8 @@
                 </div>
                 <Divider />
                 <div class="space-y-2">
-                  <div v-if="!loadingExtras && product.variants?.length" class="flex flex-col gap-2">
+
+                  <div v-if="!loadingExtras && product.variants && product.variants.length" class="flex flex-col gap-2">
                     <span class="text-gray-700 font-medium">Choose Size:</span>
                     <div class="flex gap-2 flex-wrap">
                       <Button

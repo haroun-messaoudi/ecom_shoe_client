@@ -19,19 +19,19 @@ async function fetchProductDetails() {
   } catch (e) {
     console.error('Error fetching product:', e)
     error.value = 'Failed to load product details.'
+  } finally {
+    loading.value = false
   }
 }
 
-async function fetchProductExtras() {
+async function fetchProductVariants() {
   try {
-    const res = await axios.get(`https://ecom-shoe-b2nx.onrender.com/api/products/${productId}/extras/`)
-    product.value = {
-      ...product.value,
-      images: res.data.images,
-      variants: res.data.variants,
+    const res = await axios.get(`https://ecom-shoe-b2nx.onrender.com/api/products/${productId}/variants/`)
+    if (product.value) {
+      product.value.variants = res.data.variants
     }
   } catch (e) {
-    console.warn('Extras failed:', e)
+    console.warn('Variants fetch failed:', e)
   } finally {
     loadingExtras.value = false
   }
@@ -40,9 +40,8 @@ async function fetchProductExtras() {
 onMounted(async () => {
   await fetchProductDetails()
   if (product.value) {
-    await fetchProductExtras()
+    fetchProductVariants() // fire in background
   }
-  loading.value = false
 })
 </script>
 
@@ -77,6 +76,14 @@ onMounted(async () => {
       </div>
     </div>
 
-    <ProductDetailHolder v-else :product="product" :loading-extras="loadingExtras" />
+    <ProductDetailHolder
+      v-else-if="product"
+      :product="product"
+      :loading-extras="loadingExtras"
+    />
+
+    <div v-else class="text-center text-red-600 font-semibold pt-6">
+      {{ error || 'Product not found.' }}
+    </div>
   </div>
 </template>
