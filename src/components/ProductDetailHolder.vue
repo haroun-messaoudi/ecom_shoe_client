@@ -6,32 +6,37 @@
         <Card class="w-full">
           <template #content>
             <div class="flex flex-col">
-              <div class="bg-white rounded-xl shadow mb-6 flex items-center justify-center min-h-[350px]">
+              <div class="bg-white rounded-xl shadow mb-6 flex items-center justify-center min-h-[500px]">
                 <img
                   v-if="mainImage"
-                  :src="getOptimizedImage(mainImage.image)"
+                  :src="mainImage.image"
                   :alt="product.name"
-                  loading="lazy"
-                  class="rounded-xl max-h-[400px] object-contain transition-all duration-300"
+                  loading="eager"
+                  class="rounded-xl max-h-[600px] object-contain transition-all duration-300"
                   style="max-width: 100%;"
                 />
+                <div v-else class="w-full h-[500px] bg-gray-200 animate-pulse rounded-xl"></div>
               </div>
               <div
-                v-if="product.images && product.images.length > 1"
+                v-if="!loadingExtras && product.images && product.images.length > 1"
                 class="flex gap-3 overflow-x-auto pb-2 bg-gray-50 rounded-lg px-3 py-2 shadow-inner"
               >
                 <img
                   v-for="img in product.images"
+                  loading="eager"
                   :key="img.id"
-                  :src="img.image"
+                  :src="getOptimizedImage(img.image)"
                   :alt="product.name"
                   class="w-20 h-20 object-contain rounded-lg border cursor-pointer shrink-0 transition-all duration-200 hover:scale-105 hover:shadow-lg"
                   :class="{
-                    'ring-2 ring-orange-500 border-orange-300': img.id === mainImage.id,
-                    'border-gray-200': img.id !== mainImage.id
+                    'ring-2 ring-orange-500 border-orange-300': img.id === mainImage?.id,
+                    'border-gray-200': img.id !== mainImage?.id
                   }"
                   @click="selectMainImage(img)"
                 />
+              </div>
+              <div v-else-if="loadingExtras" class="flex gap-3 mt-2">
+                <div v-for="n in 3" :key="n" class="w-20 h-20 bg-gray-200 animate-pulse rounded-lg"></div>
               </div>
             </div>
           </template>
@@ -46,13 +51,10 @@
               <h1 class="text-2xl md:text-3xl font-bold text-gray-800">
                 {{ product.name }}
               </h1>
-
               <p class="text-gray-600 text-sm md:text-base leading-relaxed">
                 {{ product.description }}
               </p>
-
               <Divider />
-
               <div class="flex items-center gap-3 flex-wrap">
                 <span v-if="product.discount_price" class="text-gray-400 line-through text-xl">
                   {{ product.price }} DA
@@ -62,11 +64,9 @@
                 </span>
                 <Tag v-if="product.discount_price" severity="warn" value="Promo" />
               </div>
-
               <Divider />
-
               <div class="space-y-2">
-                <div v-if="product.variants?.length" class="flex flex-col gap-2">
+                <div v-if="!loadingExtras && product.variants?.length" class="flex flex-col gap-2">
                   <span class="text-gray-700 font-medium">Choose Size:</span>
                   <div class="flex gap-2 flex-wrap">
                     <Button
@@ -78,7 +78,9 @@
                       :class="selectedVariant?.id === variant.id ? 'p-button-warning' : 'p-button-outlined'"
                     />
                   </div>
-
+                </div>
+                <div v-else-if="loadingExtras" class="flex gap-2">
+                  <div v-for="n in 3" :key="n" class="w-16 h-10 bg-gray-200 animate-pulse rounded"></div>
                 </div>
               </div>
 
@@ -137,10 +139,7 @@ import Button from 'primevue/button'
 import InputNumber from 'primevue/inputnumber'
 
 const props = defineProps({
-  product: {
-    type: Object,
-    required: true,
-  },
+  product: { type: Object, required: true },
   loadingExtras: { type: Boolean, default: false }
 })
 
@@ -151,11 +150,23 @@ const rawQuantity = ref(1)
 const cartStore = useCartStore()
 const router = useRouter()
 
+function getOptimizedImage(url) {
+  if (!url || !url.includes('res.cloudinary.com')) return url
+  const parts = url.split('/upload/')
+  return `${parts[0]}/upload/f_auto,q_auto,w_800,h_600,c_fit/${parts[1]}`
+}
+
+// Always set mainImage from main_image immediately, then update if images arrive
 watch(
-  () => props.product,
-  (newProduct) => {
-    if (newProduct && Array.isArray(newProduct.images) && newProduct.images.length > 0) {
-      mainImage.value = newProduct.images.find(img => img.is_main) || newProduct.images[0]
+  [() => props.product.main_image, () => props.product.images],
+  ([mainImg, images]) => {
+    if (images && images.length > 0) {
+      mainImage.value = {
+        ...images.find(img => img.is_main) || images[0],
+        image: getOptimizedImage((images.find(img => img.is_main) || images[0]).image)
+      }
+    } else if (mainImg) {
+      mainImage.value = { image: getOptimizedImage(mainImg) }
     } else {
       mainImage.value = null
     }
@@ -165,34 +176,19 @@ watch(
   { immediate: true }
 )
 
-// const maxAddable = computed(() => {
-//   if (!selectedVariant.value) return 1
-//   const existing = cartStore.items.find(i => i.variantId === selectedVariant.value.id)
-//   const alreadyInCart = existing?.quantity || 0
-//   return Math.max(selectedVariant.value.stock - alreadyInCart, 0)
-// })
-
-// watch(rawQuantity, (val) => {
-//   if (selectedVariant.value && val > maxAddable.value) {
-//     toast.warning(`Only ${maxAddable.value} left in stock for this size (including what's in your cart).`)
-//     rawQuantity.value = maxAddable.value
-//   }
-// })
-
 function selectMainImage(img) {
-  mainImage.value = img
+  mainImage.value = { ...img, image: getOptimizedImage(img.image) }
 }
-
 function selectVariant(variant) {
   selectedVariant.value = variant
   rawQuantity.value = 1
 }
 
-function getOptimizedImage(url) {
-  if (!url.includes('res.cloudinary.com')) return url
-  const parts = url.split('/upload/')
-  return `${parts[0]}/upload/f_auto,q_auto,w_800,h_600,c_fit/${parts[1]}`
-}
+const maxAddable = computed(() =>
+  selectedVariant.value
+    ? selectedVariant.value.stock - (cartStore.items.find(i => i.variantId === selectedVariant.value.id)?.quantity || 0)
+    : 0
+)
 
 function addToCart() {
   if (!selectedVariant.value) {
@@ -201,20 +197,8 @@ function addToCart() {
   }
 
   const qty = rawQuantity.value
-  if (qty < 1) {
-    toast.warning('Quantity must be at least 1')
-    return
-  }
-  if( qty > selectedVariant.value.stock) {
-    toast.error(`Only ${selectedVariant.value.stock} available for this size.`)
-    return
-  }
-  const existing = cartStore.items.find(i => i.variantId === selectedVariant.value.id)
-  const currentQty = existing?.quantity || 0
-  const newTotalQty = currentQty + qty
-
-  if (newTotalQty > selectedVariant.value.stock) {
-    toast.error(`You already have ${currentQty} in your cart. Only ${selectedVariant.value.stock} available.`)
+  if (qty < 1 || qty > selectedVariant.value.stock || qty > maxAddable.value) {
+    toast.error(`Invalid quantity.`)
     return
   }
 
@@ -235,26 +219,8 @@ function addToCart() {
 }
 
 function buyNow() {
-  if (!selectedVariant.value) {
-    toast.warning('Please select a size.')
-    return
-  }
-
-  const qty = rawQuantity.value
-  if (qty < 1) {
-    toast.warning('Quantity must be at least 1')
-    return
-  }
-  if (qty > selectedVariant.value.stock) {
-    toast.error(`Only ${selectedVariant.value.stock} available for this size.`)
-    return
-  }
-  const existing = cartStore.items.find(i => i.variantId === selectedVariant.value.id)
-  const currentQty = existing?.quantity || 0
-  const newTotalQty = currentQty + qty
-
-  if (newTotalQty > selectedVariant.value.stock) {
-    toast.error(`You already have ${currentQty} in your cart. Only ${selectedVariant.value.stock} available.`)
+  if (!selectedVariant.value || rawQuantity.value > maxAddable.value) {
+    toast.warning('Invalid quantity or size.')
     return
   }
 
@@ -266,12 +232,12 @@ function buyNow() {
     name: props.product.name,
     price: props.product.discount_price || props.product.price,
     image: mainImage.value?.image || '',
-    quantity: qty,
+    quantity: rawQuantity.value,
   }
 
   cartStore.addItem(item)
-  toast.success(`${props.product.name} (Size: ${item.size}) x${qty} added to cart`)
-  router.push({ name: 'cart' }) // Redirect to cart page
+  toast.success(`${props.product.name} (Size: ${item.size}) x${rawQuantity.value} added to cart`)
+  router.push({ name: 'cart' })
 }
 </script>
 

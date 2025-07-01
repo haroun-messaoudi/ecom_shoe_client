@@ -3,9 +3,9 @@
     <!-- Product Image -->
     <div class="relative w-full flex-1 min-h-[200px] sm:min-h-[220px] md:min-h-[240px] overflow-hidden group flex items-center justify-center">
       <img
-        :src="product.image"
+        :src="optimizedImage"
         :alt="product.name"
-        loading="lazy"
+        loading="eager"
         width="600"
         height="400"
         class="w-full h-auto object-contain group-hover:scale-105 transition-transform duration-300 max-w-full max-h-full"
@@ -76,6 +76,15 @@ const props = defineProps({
     })
   }
 })
+
+
+function getOptimizedImage(url) {
+  if (!url.includes('res.cloudinary.com')) return url
+  const parts = url.split('/upload/')
+  return `${parts[0]}/upload/f_auto,q_auto,w_600,h_400,c_fit/${parts[1]}`
+}
+
+const optimizedImage = computed(() => getOptimizedImage(props.product.image))
 
 const formattedPrice = computed(() => {
   return (props.product.discount_price ?? props.product.price).toLocaleString()
