@@ -37,6 +37,7 @@ function setupScrollAnimations() {
     entries.forEach((entry) => {
       if (entry.isIntersecting) {
         entry.target.classList.add('fade-in-up')
+        observer.unobserve(entry.target)
       }
     })
   }, { threshold: 0.2 })
@@ -48,7 +49,6 @@ function setupScrollAnimations() {
 
 function getOptimizedImage(url) {
   if (!url.includes('res.cloudinary.com')) return url
-
   const parts = url.split('/upload/')
   return `${parts[0]}/upload/f_auto,q_auto,w_300,h_200,c_fill/${parts[1]}`
 }
@@ -57,13 +57,12 @@ onMounted(async () => {
   await searchStore.fetchCategories()
   categories.value = [{ id: 0, name: 'All', image: null }, ...searchStore.categories]
 
-  await Promise.all([
-    productStore.fetchTopOrdered(),
-    productStore.fetchDiscounted(),
-    productStore.fetchNewProducts()
-  ])
-
   setupScrollAnimations()
+
+  // Use the home-specific fetch methods for top 4 products
+  productStore.fetchTopOrderedHome()
+  productStore.fetchDiscountedHome()
+  productStore.fetchNewProductsHome()
 })
 
 watch(
@@ -114,10 +113,7 @@ watch(
           <div
             v-for="cat in categories"
             :key="cat.id"
-            :class="[
-              'min-w-[110px] md:min-w-[140px] snap-start flex-shrink-0 text-center scroll-animate opacity-0 translate-y-4',
-              cat.id === 0 ? 'ml-4' : ''
-            ]"
+            :class="[ 'min-w-[110px] md:min-w-[140px] snap-start flex-shrink-0 text-center scroll-animate opacity-0 translate-y-4', cat.id === 0 ? 'ml-4' : '' ]"
           >
             <div
               class="relative w-full h-28 rounded-lg overflow-hidden cursor-pointer group transition-shadow border-2"
@@ -127,7 +123,6 @@ watch(
               }"
               @click="goToCategory(cat)"
             >
-              <!-- 'All' Icon Card -->
               <div
                 v-if="cat.id === 0"
                 class="w-full h-full relative bg-gray-400 text-orange-700 font-semibold text-sm flex items-center justify-center"
@@ -142,8 +137,6 @@ watch(
                   <span class="text-white font-semibold text-base drop-shadow">All</span>
                 </div>
               </div>
-
-              <!-- Category image -->
               <img
                 v-else-if="cat.image"
                 :src="getOptimizedImage(cat.image)"
@@ -153,13 +146,9 @@ watch(
                 height="200"
                 class="w-full h-full object-cover transition-transform group-hover:scale-105"
               />
-
-              <!-- Fallback background for categories without image -->
               <div v-else class="w-full h-full bg-orange-100 flex items-center justify-center text-orange-700">
                 {{ cat.name }}
               </div>
-
-              <!-- Name overlay -->
               <div
                 v-if="cat.id !== 0"
                 class="absolute inset-0 bg-black/40 flex items-center justify-center text-white font-semibold text-sm"
@@ -172,34 +161,44 @@ watch(
       </div>
     </section>
 
-
     <!-- Product Sections -->
     <section id="productSections" class="space-y-24">
       <!-- Recommended Section -->
       <div class="scroll-animate opacity-0 translate-y-8 rounded-2xl bg-white shadow-md px-6 py-10 md:px-10">
         <h2 class="text-center text-3xl font-semibold text-gray-800 mb-10 tracking-tight">Recommended for You</h2>
-        <ProductList :products="recommended" :loading="loadingRecommended" />
+        <ProductList
+          :products="recommended"
+          title="Recommended for You"
+          :loading="loadingRecommended"
+        />
       </div>
 
       <!-- Discounted Section -->
       <div class="scroll-animate opacity-0 translate-y-8 rounded-2xl bg-gradient-to-tr from-orange-50 to-white shadow-md px-6 py-10 md:px-10">
         <h2 class="text-center text-3xl font-semibold text-gray-800 mb-10 tracking-tight">Products on Sale</h2>
-        <ProductList :products="discounted" :loading="loadingDiscounted" />
+        <ProductList
+          :products="discounted"
+          title="Products on Sale"
+          :loading="loadingDiscounted"
+        />
       </div>
 
       <!-- New Arrivals Section -->
       <div class="scroll-animate opacity-0 translate-y-8 rounded-2xl bg-white shadow-md px-6 py-10 md:px-10">
         <h2 class="text-center text-3xl font-semibold text-gray-800 mb-10 tracking-tight">New Arrivals</h2>
-        <ProductList :products="newProducts" :loading="loadingNewProducts" />
+        <ProductList
+          :products="newProducts"
+          title="New Arrivals"
+          :loading="loadingNewProducts"
+        />
       </div>
     </section>
+
+    <!-- Footer -->
     <footer class="mt-24 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white shadow-inner border-t border-gray-700">
       <div class="max-w-screen-xl mx-auto px-6 py-10 flex flex-col md:flex-row items-center justify-between gap-6">
-        
-        <!-- Social Links -->
         <div class="flex items-center gap-6">
           <a href="https://instagram.com/yourstore" target="_blank" rel="noopener" aria-label="Instagram" class="hover:text-orange-500 transition">
-            <!-- Instagram SVG -->
             <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <rect x="2" y="2" width="20" height="20" rx="6" stroke="currentColor" stroke-width="2" fill="none"/>
               <circle cx="12" cy="12" r="5" stroke="currentColor" stroke-width="2" fill="none"/>
@@ -207,22 +206,18 @@ watch(
             </svg>
           </a>
           <a href="https://tiktok.com/@yourstore" target="_blank" rel="noopener" aria-label="TikTok" class="hover:text-orange-500 transition">
-            <!-- TikTok SVG -->
             <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
               <path d="M17.5 2v2.5a3.5 3.5 0 0 0 3.5 3.5h1V10h-1a6 6 0 0 1-6-6V2h2.5zM9 8a6 6 0 1 0 6 6h-2a4 4 0 1 1-4-4V8z"/>
             </svg>
           </a>
         </div>
-
-        <!-- Contact & Copyright -->
         <div class="text-center md:text-right text-sm space-y-1">
           <p>Call us: <a href="tel:+1234567890" class="underline hover:text-orange-500 transition">+1 234 567 890</a></p>
           <p class="text-gray-400 text-xs">&copy; {{ new Date().getFullYear() }} Ecom Shoes. All rights reserved.</p>
         </div>
       </div>
     </footer>
-    </div>
-  
+  </div>
 </template>
 
 <style scoped>

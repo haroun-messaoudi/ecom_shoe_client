@@ -7,23 +7,92 @@ export const useProductStore = defineStore('product', {
     discounted: [],
     newProducts: [],
     topOrdered: [],
-    discountedCount: 0,
-    newCount: 0,
-    topOrderedCount: 0,
-    discountedNext: null,
-    newNext: null,
-    topOrderedNext: null,
-    discountedPrevious: null,
-    newPrevious: null,
-    topOrderedPrevious: null,
+    products: [],
+    loadingProducts: false,
     loadingTopOrdered: false,
     loadingDiscounted: false,
     loadingNewProducts: false,
     error: null,
+    // Add other state as needed
   }),
 
   actions: {
-    async fetchDiscounted(params = { page: 1, page_size: 8 }) {
+    // Home page: Top 4 discounted
+    async fetchDiscountedHome() {
+      this.loadingDiscounted = true
+      this.error = null
+      try {
+        const res = await axios.get(`${BASE_URL}/discounted-home/`)
+        const data = res.data
+        this.discounted = (data.results || data).map(p => ({
+          ...p,
+          image: p.main_image_url
+        }))
+      } catch {
+        this.error = 'Failed to load discounted products.'
+      } finally {
+        this.loadingDiscounted = false
+      }
+    },
+
+    // Home page: Top 4 new
+    async fetchNewProductsHome() {
+      this.loadingNewProducts = true
+      this.error = null
+      try {
+        const res = await axios.get(`${BASE_URL}/new-home/`)
+        const data = res.data
+        this.newProducts = (data.results || data).map(p => ({
+          ...p,
+          image: p.main_image_url,
+          isNew: true
+        }))
+      } catch {
+        this.error = 'Failed to load new products.'
+      } finally {
+        this.loadingNewProducts = false
+      }
+    },
+
+    // Home page: Top 4 top-ordered
+    async fetchTopOrderedHome() {
+      this.loadingTopOrdered = true
+      this.error = null
+      try {
+        const res = await axios.get(`${BASE_URL}/top-ordered-home/`)
+        const data = res.data
+        this.topOrdered = (data.results || data).map(p => ({
+          ...p,
+          image: p.main_image_url
+        }))
+      } catch {
+        this.error = 'Failed to load top ordered products.'
+      } finally {
+        this.loadingTopOrdered = false
+      }
+    },
+
+    // Original: Fetch all products (with pagination/filter)
+    async fetchProducts(params = {}) {
+      this.loadingProducts = true
+      this.error = null
+      try {
+        const res = await axios.get(`${BASE_URL}/list/`, { params })
+        const data = res.data
+        this.products = (data.results || data).map(p => ({
+          ...p,
+          image: p.main_image_url
+        }))
+        // Optionally handle pagination info here
+      } catch {
+        this.error = 'Failed to load products.'
+      } finally {
+        this.loadingProducts = false
+      }
+    },
+
+    // Original: Fetch all discounted products (with pagination/filter)
+    async fetchDiscounted(params = {}) {
       this.loadingDiscounted = true
       this.error = null
       try {
@@ -33,9 +102,6 @@ export const useProductStore = defineStore('product', {
           ...p,
           image: p.main_image_url
         }))
-        this.discountedCount = data.count ?? this.discounted.length
-        this.discountedNext = data.next ?? null
-        this.discountedPrevious = data.previous ?? null
       } catch {
         this.error = 'Failed to load discounted products.'
       } finally {
@@ -43,20 +109,18 @@ export const useProductStore = defineStore('product', {
       }
     },
 
-    async fetchNewProducts(params = { page: 1, page_size: 8 }) {
+    // Original: Fetch all new products (with pagination/filter)
+    async fetchNewProducts(params = {}) {
       this.loadingNewProducts = true
       this.error = null
       try {
-        const res = await axios.get(`${BASE_URL}/new-products/`, { params })
+        const res = await axios.get(`${BASE_URL}/new/`, { params })
         const data = res.data
         this.newProducts = (data.results || data).map(p => ({
           ...p,
           image: p.main_image_url,
           isNew: true
         }))
-        this.newCount = data.count ?? this.newProducts.length
-        this.newNext = data.next ?? null
-        this.newPrevious = data.previous ?? null
       } catch {
         this.error = 'Failed to load new products.'
       } finally {
@@ -64,7 +128,8 @@ export const useProductStore = defineStore('product', {
       }
     },
 
-    async fetchTopOrdered(params = { page: 1, page_size: 8 }) {
+    // Original: Fetch all top-ordered products (with pagination/filter)
+    async fetchTopOrdered(params = {}) {
       this.loadingTopOrdered = true
       this.error = null
       try {
@@ -74,9 +139,6 @@ export const useProductStore = defineStore('product', {
           ...p,
           image: p.main_image_url
         }))
-        this.topOrderedCount = data.count ?? this.topOrdered.length
-        this.topOrderedNext = data.next ?? null
-        this.topOrderedPrevious = data.previous ?? null
       } catch {
         this.error = 'Failed to load top ordered products.'
       } finally {

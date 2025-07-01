@@ -10,6 +10,7 @@ const searchStore = useSearchStore()
 
 const currentPage = ref(1)
 const pageSize = 12
+const pageTransitioning = ref(false)
 
 const categoryId = ref(route.query.category ? Number(route.query.category) : null)
 
@@ -39,10 +40,14 @@ function goToCategory(cat) {
 }
 
 const fetchPage = async () => {
+  pageTransitioning.value = true
+  searchStore.results = [] // ✅ Clear old results to prevent flicker
+  window.scrollTo({ top: 0, behavior: 'smooth' }) // ✅ Bonus scroll to top
   await searchStore.searchProducts({
     page: currentPage.value,
     page_size: pageSize,
   })
+  pageTransitioning.value = false
 }
 
 watch(
@@ -60,6 +65,7 @@ watch(
 )
 
 watch(currentPage, async val => {
+  if (val === searchStore.page) return
   searchStore.setPage(val)
   const query = { ...route.query, page: val }
   router.replace({ name: route.name, query })
@@ -78,7 +84,7 @@ onMounted(async () => {
 <template>
   <div>
     <div class="px-6 py-8 space-y-8">
-      <!-- Category Image Carousel -->
+      <!-- Category Carousel -->
       <div class="mb-6">
         <div class="flex gap-4 overflow-x-auto no-scrollbar pb-1">
           <div
@@ -106,7 +112,7 @@ onMounted(async () => {
                 </div>
               </div>
               <img
-                v-if="cat.image"
+                v-else-if="cat.image"
                 :src="cat.image"
                 :alt="cat.name"
                 class="w-full h-full object-cover transition-transform group-hover:scale-105"
@@ -128,47 +134,19 @@ onMounted(async () => {
         </div>
       </div>
 
-      <!-- Loading Spinner -->
-      <div
-        v-if="searchStore.loading"
-        class="flex flex-col items-center justify-center py-20 text-gray-600 space-y-4"
-      >
-        <svg
-          class="animate-spin h-8 w-8 text-orange-600"
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-        >
-          <circle
-            class="opacity-25"
-            cx="12"
-            cy="12"
-            r="10"
-            stroke="currentColor"
-            stroke-width="4"
-          />
-          <path
-            class="opacity-75"
-            fill="currentColor"
-            d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
-          />
-        </svg>
-        <p class="text-lg font-medium">Searching...</p>
-      </div>
-
       <!-- Product Results -->
       <ProductGrid
-        v-else
-        :title="[ 
+        :title="[
           'Results',
           currentCategoryName ? 'in ' + currentCategoryName : '',
           searchStore.searchTerm ? `for '${searchStore.searchTerm}'` : ''
         ].filter(Boolean).join(' ')"
         :products="searchStore.results"
-        :loading="false"
+        :loading="pageTransitioning || searchStore.loading"
         :error="searchStore.error"
       />
 
+      <!-- No Results -->
       <div
         v-if="!searchStore.loading && !searchStore.error && searchStore.results.length === 0"
         class="text-center text-gray-500 mt-10"
@@ -176,7 +154,7 @@ onMounted(async () => {
         No products found.
       </div>
 
-      <!-- Pagination Controls -->
+      <!-- Pagination -->
       <Transition name="fade">
         <div v-if="!searchStore.loading && totalPages > 1" class="flex justify-center items-center gap-4 mt-10">
           <button
