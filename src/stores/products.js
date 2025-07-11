@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import axios from 'axios'
-const BASE_URL = 'https://ecom-shoe-b2nx.onrender.com/api/products'
+const BASE_URL = 'https://ecom-shoe-no8p.onrender.com/api/products'
 
 export const useProductStore = defineStore('product', {
   state: () => ({
