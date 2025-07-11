@@ -1,4 +1,6 @@
+
 <script setup>
+import { debounce } from 'lodash'
 import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import ProductGrid from '@/components/ProductGrid.vue'
@@ -29,30 +31,39 @@ const totalPages = computed(() => {
   return Math.max(1, Math.ceil((searchStore.count || 0) / pageSize))
 })
 
-function goToCategory(cat) {
-  const q = searchStore.searchTerm.trim()
-  const query = {
+function buildQuery(cat, searchTerm, page = 1) {
+  const q = searchTerm.trim();
+  return {
     category: cat.id || undefined,
     search: q || undefined,
-    page: 1,
-  }
-  router.push({ name: 'products', query })
+    page,
+  };
+}
+
+function goToCategory(cat) {
+  const query = buildQuery(cat, searchStore.searchTerm);
+  router.push({ name: 'products', query });
 }
 
 const fetchPage = async () => {
-  pageTransitioning.value = true
-  searchStore.results = [] // ✅ Clear old results to prevent flicker
-  window.scrollTo({ top: 0, behavior: 'smooth' }) // ✅ Bonus scroll to top
-  await searchStore.searchProducts({
-    page: currentPage.value,
-    page_size: pageSize,
-  })
-  pageTransitioning.value = false
+  try {
+    pageTransitioning.value = true
+    searchStore.results = [] // ✅ Clear old results to prevent flicker
+    window.scrollTo({ top: 0, behavior: 'smooth' }) // ✅ Bonus scroll to top
+    await searchStore.searchProducts({
+      page: currentPage.value,
+      page_size: pageSize,
+    })
+  } catch (error) {
+    console.error('Error fetching page:', error)
+  } finally {
+    pageTransitioning.value = false
+  }
 }
 
 watch(
   () => route.query,
-  async q => {
+  debounce(async q => {
     searchStore.setSearchTerm(q.search || '')
     searchStore.setCategory(q.category ? Number(q.category) : null)
     categoryId.value = q.category ? Number(q.category) : null
@@ -60,7 +71,7 @@ watch(
     if (page !== currentPage.value) currentPage.value = page
     searchStore.setPage(page)
     await fetchPage()
-  },
+  }, 300),
   { immediate: true }
 )
 
@@ -77,7 +88,11 @@ watch(() => searchStore.page, (val) => {
 })
 
 onMounted(async () => {
-  if (!searchStore.categories.length) await searchStore.fetchCategories()
+  try {
+    if (!searchStore.categories.length) await searchStore.fetchCategories()
+  } catch (error) {
+    console.error('Error fetching categories:', error)
+  }
 })
 </script>
 
@@ -94,7 +109,7 @@ onMounted(async () => {
           >
             <div
               class="relative w-full h-24 rounded-lg overflow-hidden cursor-pointer group border-2 transition"
-              :class="{
+              v-bind:class="{
                 'border-orange-500 shadow-md': cat.id === categoryId,
                 'border-transparent': cat.id !== categoryId
               }"

@@ -18,6 +18,7 @@
     "@vueuse/motion": "^3.0.3",
     "axios": "^1.10.0",
     "pinia": "^3.0.1",
+    "pinia-plugin-persistedstate": "^4.4.1",
     "primeflex": "^4.0.0",
     "primeicons": "^7.0.0",
     "primevue": "^4.3.5",
