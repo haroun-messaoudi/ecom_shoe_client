@@ -38,7 +38,7 @@ const cartItemCount = computed(() =>
 </script>
 
 <template>
-  <header class="fixed top-0 left-0 w-full bg-white shadow-sm z-50">
+  <header class="fixed top-0 left-0 w-full bg-white/30 backdrop-blur-md shadow-md border-b border-white/20 z-50">
     <div class="flex items-center justify-between px-4 py-2 md:px-8">
       <!-- Left section: mobile menu + home -->
       <div class="flex items-center gap-2">
@@ -90,22 +90,31 @@ const cartItemCount = computed(() =>
 
     <!-- Mobile menu -->
     <transition name="slide">
-      <div v-if="mobileOpen" class="md:hidden bg-white border-t border-gray-200">
-        <nav class="flex flex-col px-4 py-2 space-y-2">
-          <RouterLink to="/" @click="mobileOpen = false" class="flex items-center px-3 py-2 rounded hover:bg-orange-50">
+      <div
+        v-if="mobileOpen"
+        class="md:hidden bg-white/20 backdrop-blur-lg border-t border-white/10 shadow-lg px-6 py-4 rounded-b-xl space-y-2"
+      >
+        <nav class="flex flex-col divide-y divide-white/10">
+          <RouterLink
+            to="/"
+            @click="mobileOpen = false"
+            class="py-3 text-gray-800 font-medium hover:text-orange-500 transition"
+          >
             Home
           </RouterLink>
+
           <RouterLink
             v-for="link in navLinks"
             :key="link.label"
             @click="mobileOpen = false"
             :to="{ path: link.path, query: link.query }"
-            class="px-3 py-2 rounded hover:bg-orange-50 text-gray-700 font-medium"
+            class="py-3 text-gray-800 font-medium hover:text-orange-500 transition"
           >
             {{ link.label }}
           </RouterLink>
         </nav>
       </div>
+
     </transition>
   </header>
 

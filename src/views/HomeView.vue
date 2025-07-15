@@ -5,6 +5,8 @@ import { useMotion } from '@vueuse/motion'
 import ProductList from '../components/ProductList.vue'
 import { useSearchStore } from '@/stores/search'
 import { useProductStore } from '@/stores/products'
+import Button from 'primevue/button'
+
 
 const router = useRouter()
 const searchStore = useSearchStore()
@@ -51,6 +53,15 @@ function getOptimizedImage(url) {
   if (!url.includes('res.cloudinary.com')) return url
   const parts = url.split('/upload/')
   return `${parts[0]}/upload/f_auto,q_auto,w_300,h_200,c_fill/${parts[1]}`
+}
+function showAllRecommended() {
+  router.push({ name: 'products' })
+}
+function showAllOnSale() {
+  router.push({ name: 'onSales' })
+}
+function showAllNewArrivals() {
+  router.push({ name: 'newArrivals' })
 }
 
 onMounted(async () => {
@@ -162,30 +173,40 @@ watch(
     </section>
 
     <!-- Product Sections -->
+        <!-- Product Sections -->
     <section id="productSections" class="space-y-24">
-      <!-- Recommended Section -->
+      <!-- Best Sellers Section -->
       <div class="scroll-animate opacity-0 translate-y-8 rounded-2xl bg-white shadow-md px-6 py-10 md:px-10">
-        <h2 class="text-center text-3xl font-semibold text-gray-800 mb-10 tracking-tight">Recommended for You</h2>
+        <div class="flex items-center justify-between mb-10">
+          <h2 class="text-3xl font-semibold text-gray-800 tracking-tight">Our Best Sellers</h2>
+          <Button class="p-button-sm p-button-text" label="Show All" @click="showAllRecommended" />
+        </div>
         <ProductList
           :products="recommended"
-          title="Recommended for You"
+          title="Our Best Sellers"
           :loading="loadingRecommended"
         />
       </div>
 
-      <!-- Discounted Section -->
+      <!-- Hot Deals Section -->
       <div class="scroll-animate opacity-0 translate-y-8 rounded-2xl bg-gradient-to-tr from-orange-50 to-white shadow-md px-6 py-10 md:px-10">
-        <h2 class="text-center text-3xl font-semibold text-gray-800 mb-10 tracking-tight">Products on Sale</h2>
+        <div class="flex items-center justify-between mb-10">
+          <h2 class="text-3xl font-semibold text-gray-800 tracking-tight">Hot Deals</h2>
+          <Button class="p-button-sm p-button-text" label="Show All" @click="showAllOnSale" />
+        </div>
         <ProductList
           :products="discounted"
-          title="Products on Sale"
+          title="Hot Deals"
           :loading="loadingDiscounted"
         />
       </div>
 
       <!-- New Arrivals Section -->
-      <div class="scroll-animate opacity-0 translate-y-8 rounded-2xl bg-white shadow-md px-6 py-10 md:px-10">
-        <h2 class="text-center text-3xl font-semibold text-gray-800 mb-10 tracking-tight">New Arrivals</h2>
+      <div v-if="newProducts.length > 0" class="scroll-animate opacity-0 translate-y-8 rounded-2xl bg-white shadow-md px-6 py-10 md:px-10">
+        <div class="flex items-center justify-between mb-10">
+          <h2 class="text-3xl font-semibold text-gray-800 tracking-tight">New Arrivals</h2>
+          <Button class="p-button-sm p-button-text" label="Show All" @click="showAllNewArrivals" />
+        </div>
         <ProductList
           :products="newProducts"
           title="New Arrivals"
@@ -194,47 +215,45 @@ watch(
       </div>
     </section>
 
+
     <!-- Footer -->
     <footer class="mt-24 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white shadow-inner border-t border-gray-700">
-      <div class="max-w-screen-xl mx-auto px-6 py-10 flex flex-col md:flex-row items-center justify-between gap-6">
-        <div class="flex items-center gap-6">
-          <a href="https://instagram.com/yourstore" target="_blank" rel="noopener" aria-label="Instagram" class="hover:text-orange-500 transition">
-            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <div class="max-w-screen-xl mx-auto px-6 py-16 grid grid-cols-1 md:grid-cols-3 gap-8">
+        <!-- Contact Us Section -->
+        <div>
+          <h3 class="text-xl font-semibold mb-4">Contact Us</h3>
+          <p class="mb-2">Phone: <a href="tel:+2160675986988" class="underline hover:text-orange-500 transition">0675 986 988</a></p>
+          <div class="flex gap-2">
+          <p class="mb-4">Follow us on Instagram:</p>
+          <a href="https://instagram.com/zi__punisher/" target="_blank" rel="noopener" aria-label="Instagram" class="inline-flex items-center hover:text-orange-500 transition">
+            <svg class="w-6 h-6 mr-2" fill="currentColor" viewBox="0 0 24 24">
               <rect x="2" y="2" width="20" height="20" rx="6" stroke="currentColor" stroke-width="2" fill="none"/>
               <circle cx="12" cy="12" r="5" stroke="currentColor" stroke-width="2" fill="none"/>
               <circle cx="17" cy="7" r="1.2" fill="currentColor"/>
             </svg>
           </a>
-          <a href="https://tiktok.com/@yourstore" target="_blank" rel="noopener" aria-label="TikTok" class="hover:text-orange-500 transition">
-            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M17.5 2v2.5a3.5 3.5 0 0 0 3.5 3.5h1V10h-1a6 6 0 0 1-6-6V2h2.5zM9 8a6 6 0 1 0 6 6h-2a4 4 0 1 1-4-4V8z"/>
-            </svg>
-          </a>
+          </div>
         </div>
-        <div class="text-center md:text-right text-sm space-y-1">
-          <p>Call us: <a href="tel:+1234567890" class="underline hover:text-orange-500 transition">+1 234 567 890</a></p>
-          <p class="text-gray-400 text-xs">&copy; {{ new Date().getFullYear() }} Ecom Shoes. All rights reserved.</p>
+
+        <!-- Quick Links Section -->
+        <div>
+          <h3 class="text-xl font-semibold mb-4">Quick Links</h3>
+          <ul class="space-y-2">
+            <li><router-link to="/" class="hover:text-orange-500 transition">Home</router-link></li>
+            <li><router-link to="/products" class="hover:text-orange-500 transition">Shop</router-link></li>
+          </ul>
         </div>
+      </div>
+      <div class="border-t border-gray-700 mt-8 pt-4 text-center text-gray-400 text-xs">
+        &copy; {{ new Date().getFullYear() }} Ecom Shoes. All rights reserved.
       </div>
     </footer>
   </div>
 </template>
 
 <style scoped>
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-.no-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-.fade-in-up {
-  opacity: 1 !important;
-  transform: translateY(0) !important;
-  transition: all 0.6s ease-out;
-}
-.scroll-animate {
-  opacity: 0;
-  transform: translateY(30px);
-}
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+.fade-in-up { opacity: 1 !important; transform: translateY(0) !important; transition: all 0.6s ease-out; }
+.scroll-animate { opacity: 0; transform: translateY(30px); }
 </style>
