@@ -39,7 +39,33 @@ function buildQuery(cat, searchTerm, page = 1) {
     page,
   };
 }
+function getOptimizedImage(url) {
+  const bunnyBase = 'https://mybunnyI.b-cdn.net'; // Replace with your real BunnyCDN hostname
 
+  // ✅ Already BunnyCDN? Return as is
+  if (url.includes('b-cdn.net') || url.startsWith(bunnyBase)) {
+    return url;
+  }
+
+  // ✅ Cloudinary → BunnyCDN without resizing
+  if (url.includes('res.cloudinary.com')) {
+    const parts = url.split('/upload/');
+    if (parts.length === 2) {
+      return `${bunnyBase}/image/upload/${parts[1]}`;
+    }
+    return url; // fallback if unexpected
+  }
+
+  // ✅ Proxy backend/static images via BunnyCDN
+  if (url.startsWith('http')) {
+    return `${bunnyBase}/uploads/${encodeURIComponent(url)}`;
+  }
+
+  // ✅ Fallback: relative URLs
+  return `${bunnyBase}${url.startsWith('/') ? '' : '/'}${url}`;
+}
+
+  
 function goToCategory(cat) {
   const query = buildQuery(cat, searchStore.searchTerm);
   router.push({ name: 'products', query });
@@ -128,7 +154,7 @@ onMounted(async () => {
               </div>
               <img
                 v-else-if="cat.image"
-                :src="cat.image"
+                :src="getOptimizedImage(cat.image)"
                 :alt="cat.name"
                 class="w-full h-full object-cover transition-transform group-hover:scale-105"
               />
