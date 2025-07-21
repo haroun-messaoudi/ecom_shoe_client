@@ -156,8 +156,6 @@ const cartStore = useCartStore()
 const router = useRouter()
 
 function getOptimizedImage(url) {
-  if (!url || !url.includes('res.cloudinary.com')) return url
-
   const parts = url.split('/upload/')
   if (parts.length !== 2) return url
 
