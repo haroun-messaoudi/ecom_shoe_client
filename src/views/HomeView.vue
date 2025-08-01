@@ -85,6 +85,9 @@ function showAllNewArrivals() {
   router.push({ name: 'newArrivals' })
 }
 
+const showNewProductsSection = ref(false);
+
+
 onMounted(async () => {
   await searchStore.fetchCategories()
   categories.value = [{ id: 0, name: 'All', image: null }, ...searchStore.categories]
@@ -92,9 +95,12 @@ onMounted(async () => {
   setupScrollAnimations()
 
   // Use the home-specific fetch methods for top 4 products
-  productStore.fetchTopOrderedHome()
-  productStore.fetchDiscountedHome()
-  productStore.fetchNewProductsHome()
+  await Promise.all([
+    productStore.fetchTopOrderedHome(),
+    productStore.fetchDiscountedHome(),
+    productStore.fetchNewProductsHome(),
+  ]);
+
 })
 
 watch(
@@ -221,9 +227,8 @@ watch(
           :loading="loadingDiscounted"
         />
       </div>
-
       <!-- New Arrivals Section -->
-      <div v-if="!loadingNewProducts && newProducts.length > 0" class="scroll-animate opacity-0 translate-y-8 rounded-2xl bg-white shadow-md px-6 py-10 md:px-10">
+      <div v-show="productStore.newProducts.length > 0" class="scroll-animate opacity-0 translate-y-8 rounded-2xl bg-white shadow-md px-6 py-10 md:px-10">
         <div class="flex items-center justify-between mb-10">
           <h2 class="text-3xl font-semibold text-gray-800 tracking-tight">New Arrivals</h2>
           <Button class="p-button-sm p-button-text" label="Show All" @click="showAllNewArrivals" />
