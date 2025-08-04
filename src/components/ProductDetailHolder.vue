@@ -2,29 +2,24 @@
   <div class="max-w-screen-xl mx-auto px-4 py-8">
     <!-- Dynamic Breadcrumb: top left, above product -->
     <nav class="mb-6 w-full overflow-x-auto" aria-label="Breadcrumb">
-      <ol class="flex items-center space-x-2 sm:space-x-4 text-gray-600 text-base sm:text-lg font-medium">
+      <ol class="flex items-center gap-1 sm:gap-2 text-sm sm:text-base text-gray-500 font-normal whitespace-nowrap">
         <template v-for="(crumb, index) in breadcrumb" :key="index">
           <li class="flex items-center">
-            <router-link
-              v-if="crumb.to"
-              :to="crumb.to"
-              class="transition-colors hover:text-orange-600 truncate max-w-[160px] sm:max-w-[240px]"
-            >
-              {{ crumb.name }}
-            </router-link>
-            <span
-              v-else
-              class="text-black font-semibold truncate max-w-[160px] sm:max-w-[240px]"
-            >
-              {{ crumb.name }}
-            </span>
-            <span
-              v-if="index < breadcrumb.length - 1"
-              class="mx-2 text-gray-400 text-xl select-none"
-            >
-              /
-            </span>
-          </li>
+          <router-link
+            v-if="crumb.to"
+            :to="crumb.to"
+            class="hover:text-black transition-colors text-lg text-gray-500"
+          >
+            {{ crumb.name }}
+          </router-link>
+          <span v-else class="text-slate-800 font-semibold text-base">
+            {{ crumb.name }}
+          </span>
+          <span v-if="index < breadcrumb.length - 1" class="mx-1 text-gray-400">
+            &gt;
+          </span>
+        </li>
+
         </template>
       </ol>
     </nav>
@@ -123,12 +118,12 @@
                   />
                 </div>
                 <!-- Price: below image section, big and highlighted (mobile only) -->
-                <div class="mt-6 flex items-center gap-3 justify-center sm:hidden">
-                  <span v-if="product.discount_price" class="text-gray-400 line-through text-lg">
-                    {{ Math.floor(product.price) }} DA
+                <div class="mt-6 flex items-center justify-center gap-2 flex-nowrap sm:hidden whitespace-nowrap overflow-hidden">
+                  <span v-if="product.discount_price" class="text-gray-400 line-through text-base sm:text-lg whitespace-nowrap">
+                    {{ Math.floor(product.price) }}&nbsp;DA
                   </span>
-                  <span class="text-3xl font-extrabold text-orange-600 drop-shadow">
-                    {{ Math.floor(product.discount_price || product.price) }} DA
+                  <span class="text-2xl sm:text-3xl font-extrabold text-orange-600 drop-shadow whitespace-nowrap">
+                    {{ Math.floor(product.discount_price || product.price) }}&nbsp;DA
                   </span>
                   <span
                     v-if="product.discount_price"
@@ -333,9 +328,13 @@ watch(
   [() => props.product.main_image, () => props.product.images],
   ([mainImg, images]) => {
     if (images && images.length > 0) {
-      mainImage.value = {
-        ...images.find(img => img.is_main) || images[0],
-        image: getOptimizedImage((images.find(img => img.is_main) || images[0]).image)
+      const main = images.find(img => img.is_main) || images[0]
+      const optimizedMain = { ...main, image: getOptimizedImage(main.image) }
+      mainImage.value = optimizedMain
+
+      const index = galleryImages.value.findIndex(i => i.id === main.id)
+      if (index !== -1) {
+        currentImageIndex.value = index
       }
     } else if (mainImg) {
       mainImage.value = { image: getOptimizedImage(mainImg) }
@@ -349,8 +348,13 @@ watch(
 )
 
 function selectMainImage(img) {
+  const index = galleryImages.value.findIndex(i => i.id === img.id)
+  if (index !== -1) {
+    currentImageIndex.value = index
+  }
   mainImage.value = { ...img, image: getOptimizedImage(img.image) }
 }
+
 function selectVariant(variant) {
   selectedVariant.value = variant
   rawQuantity.value = 1
