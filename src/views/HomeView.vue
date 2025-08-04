@@ -50,29 +50,17 @@ function setupScrollAnimations() {
 }
 
 function getOptimizedImage(url) {
-  const bunnyBase = 'https://mybunnyI.b-cdn.net'; // Replace with your real BunnyCDN hostname
-
-  // ✅ Already BunnyCDN? Return as is
-  if (url.includes('b-cdn.net') || url.startsWith(bunnyBase)) {
-    return url;
-  }
-
-  // ✅ Cloudinary → BunnyCDN without resizing
+  if (!url) return ''
+  // Only optimize if it's a Cloudinary image
   if (url.includes('res.cloudinary.com')) {
-    const parts = url.split('/upload/');
+    const parts = url.split('/upload/')
     if (parts.length === 2) {
-      return `${bunnyBase}/image/upload/${parts[1]}`;
+      // Add Cloudinary transformation for optimization
+      return `${parts[0]}/upload/f_auto,q_auto,w_400,h_300,c_fit/${parts[1]}`
     }
-    return url; // fallback if unexpected
   }
-
-  // ✅ Proxy backend/static images via BunnyCDN
-  if (url.startsWith('http')) {
-    return `${bunnyBase}/uploads/${encodeURIComponent(url)}`;
-  }
-
-  // ✅ Fallback: relative URLs
-  return `${bunnyBase}${url.startsWith('/') ? '' : '/'}${url}`;
+  // Return original for non-Cloudinary images
+  return url
 }
 
 function showAllRecommended() {

@@ -84,9 +84,8 @@ function getOptimizedImage(url) {
   const parts = url.split('/upload/')
   if (parts.length !== 2) return url
 
-  const bunnyBase = 'https://mybunnyI.b-cdn.net' // Replace with your real BunnyCDN hostname
-  // console.log(`${bunnyBase}/image/upload/f_auto,q_auto,w_400,h_300,c_fit/${parts[1]}`)
-  return `${bunnyBase}/image/upload/f_auto,q_auto,w_400,h_300,c_fit/${parts[1]}`
+  // Cloudinary transformation for optimization
+  return `${parts[0]}/upload/f_auto,q_auto,w_400,h_300,c_fit/${parts[1]}`
 }
 
 

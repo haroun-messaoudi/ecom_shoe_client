@@ -156,13 +156,17 @@ const cartStore = useCartStore()
 const router = useRouter()
 
 function getOptimizedImage(url) {
-  const parts = url.split('/upload/')
-  if (parts.length !== 2) return url
-
-  // Replace domain with your BunnyCDN pull zone
-  const bunnyBase = 'https://mybunnyI.b-cdn.net'
-
-  return `${bunnyBase}/image/upload/f_auto,q_auto,w_800,h_600,c_fit/${parts[1]}`
+  if (!url) return ''
+  // Only optimize if it's a Cloudinary image
+  if (url.includes('res.cloudinary.com')) {
+    const parts = url.split('/upload/')
+    if (parts.length === 2) {
+      // Add Cloudinary transformation for optimization
+      return `${parts[0]}/upload/f_auto,q_auto,w_800,h_600,c_fit/${parts[1]}`
+    }
+  }
+  // Return original for non-Cloudinary images
+  return url
 }
 
 // Always set mainImage from main_image immediately, then update if images arrive
