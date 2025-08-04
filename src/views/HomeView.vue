@@ -103,6 +103,11 @@ watch(
     }
   }
 )
+
+function scrollToBuySection() {
+  const el = document.getElementById('productSections')
+  if (el) el.scrollIntoView({ behavior: 'smooth' })
+}
 </script>
 
 <template>
@@ -253,8 +258,14 @@ watch(
         <div>
           <h3 class="text-xl font-semibold mb-4">Quick Links</h3>
           <ul class="space-y-2">
-            <li><router-link to="/" class="hover:text-orange-500 transition">Home</router-link></li>
-            <li><router-link to="/products" class="hover:text-orange-500 transition">Shop</router-link></li>
+            <li>
+              <a href="#productSections" class="hover:text-orange-500 transition" @click.prevent="scrollToBuySection">
+                Home
+              </a>
+            </li>
+            <li>
+              <router-link to="/products" class="hover:text-orange-500 transition">Shop</router-link>
+            </li>
           </ul>
         </div>
       </div>
