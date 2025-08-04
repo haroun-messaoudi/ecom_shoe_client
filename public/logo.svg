@@ -1,11 +1,14 @@
-<?xml version="1.0" encoding="iso-8859-1"?>
-<!-- Uploaded to: SVG Repo, www.svgrepo.com, Generator: SVG Repo Mixer Tools -->
-<svg height="800px" width="800px" version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" 
-	 viewBox="0 0 512.016 512.016" xml:space="preserve">
-<polygon points="145.544,151.36 105.184,31.92 0.68,31.92 0.68,0 128.096,0 175.784,141.136 "/>
-<polygon style="fill:#FFD67F;" points="68.128,124.56 511.336,124.56 426.856,361.584 141.936,361.584 "/>
-<circle cx="377.128" cy="450.56" r="61.456"/>
-<circle cx="191.752" cy="450.56" r="61.456"/>
-<polygon style="fill:#FF583E;" points="325.28,52.496 451.744,180.664 325.28,308.816 203.936,308.816 330.608,180.664 
-	203.936,52.496 "/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <g>
+    <rect width="64" height="64" rx="16" fill="#fff"/>
+    <path d="M10 44c0-6 8-12 18-12s18 6 18 12c0 4-4 8-18 8S10 48 10 44z" fill="#FF6F00"/>
+    <path d="M28 32c0-4 4-8 8-8s8 4 8 8" stroke="#fff" stroke-width="2" fill="none"/>
+    <ellipse cx="28" cy="44" rx="4" ry="2" fill="#fff"/>
+    <ellipse cx="36" cy="44" rx="4" ry="2" fill="#fff"/>
+    <ellipse cx="44" cy="44" rx="4" ry="2" fill="#fff"/>
+    <circle cx="24" cy="40" r="2" fill="#fff"/>
+    <circle cx="40" cy="40" r="2" fill="#fff"/>
+    <path d="M14 44c0-2 2-4 6-4s6 2 6 4" stroke="#fff" stroke-width="2" fill="none"/>
+    <path d="M50 44c0-2-2-4-6-4s-6 2-6 4" stroke="#fff" stroke-width="2" fill="none"/>
+  </g>
 </svg>
