@@ -3,8 +3,7 @@
     <!-- Dynamic Breadcrumb: top left, above product -->
     <nav class="mb-6 w-full overflow-x-auto" aria-label="Breadcrumb">
       <ol class="flex items-center gap-1 sm:gap-2 text-sm sm:text-base text-gray-500 font-normal whitespace-nowrap">
-        <template v-for="(crumb, index) in breadcrumb" :key="index">
-          <li class="flex items-center">
+        <li v-for="(crumb, index) in breadcrumb" :key="index" class="flex items-center">
           <router-link
             v-if="crumb.to"
             :to="crumb.to"
@@ -19,8 +18,6 @@
             &gt;
           </span>
         </li>
-
-        </template>
       </ol>
     </nav>
 
@@ -169,17 +166,70 @@
                 </div>
                 <Divider />
                 <div class="space-y-2">
-                  <div v-if="!loadingExtras && product.variants && product.variants.length" class="flex flex-col gap-2">
-                    <span class="text-gray-700 font-medium">Choose Size:</span>
+                  <div v-if="!loadingExtras && product.variants && product.variants.length" class="flex flex-col gap-3">
+                    <span class="text-gray-700 font-medium text-sm sm:text-base">Choose Size:</span>
                     <div class="flex gap-2 flex-wrap">
                       <Button
                         v-for="variant in product.variants"
                         :key="variant.id"
-                        :label="variant.size"
+                        :label="variant.stock === 0 ? `${variant.size} (Out of Stock)` : variant.size"
                         :disabled="variant.stock === 0"
                         @click="selectVariant(variant)"
-                        :class="selectedVariant?.id === variant.id ? 'p-button-warning' : 'p-button-outlined'"
-                      />
+                        :class="[
+                          variant.stock === 0 
+                            ? 'p-button-secondary opacity-60 cursor-not-allowed border-red-300 text-red-600' 
+                            : selectedVariant?.id === variant.id 
+                              ? 'p-button-warning' 
+                              : 'p-button-outlined',
+                          'text-sm sm:text-base px-3 py-2 sm:px-4 sm:py-3 relative'
+                        ]"
+                      >
+                        <template v-if="variant.stock === 0">
+                          <div class="flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                            <span>{{ variant.size }}</span>
+                            <span class="text-xs bg-red-100 text-red-700 px-2 py-1 rounded-full">Out of Stock</span>
+                          </div>
+                        </template>
+                      </Button>
+                    </div>
+                    
+                    <!-- Stock Information Display -->
+                    <div v-if="selectedVariant" class="mt-4 p-3 sm:p-4 bg-gray-50 rounded-lg border-l-4 border-orange-400">
+                      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                        <div class="flex-1">
+                          <h4 class="font-semibold text-gray-800 text-base sm:text-lg">Size: {{ selectedVariant.size }}</h4>
+                          <div class="mt-2 space-y-1">
+                            <div v-if="selectedVariant.stock === 0" class="flex items-center gap-2">
+                              <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                              <p class="text-red-600 font-semibold">Out of Stock</p>
+                            </div>
+                            <div v-else class="flex items-center gap-2">
+                              <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                              </svg>
+                              <p class="text-sm text-gray-600">
+                                Available: <span class="font-semibold text-green-600">{{ selectedVariant.stock }}</span> units
+                              </p>
+                            </div>
+                            <p v-if="cartStore.items.find(i => i.variantId === selectedVariant.id)" class="text-sm text-orange-600">
+                              Already in cart: {{ cartStore.items.find(i => i.variantId === selectedVariant.id)?.quantity || 0 }} units
+                            </p>
+                          </div>
+                        </div>
+                        <div v-if="selectedVariant.stock > 0" class="text-center sm:text-right bg-white rounded-lg p-3 border border-orange-200">
+                          <p class="text-xs sm:text-sm text-gray-600 mb-1">Max you can add:</p>
+                          <p class="font-bold text-xl sm:text-2xl text-orange-600">{{ maxAddable }}</p>
+                        </div>
+                        <div v-else class="text-center sm:text-right bg-red-50 rounded-lg p-3 border border-red-200">
+                          <p class="text-xs sm:text-sm text-red-600 mb-1">Stock Status:</p>
+                          <p class="font-bold text-xl sm:text-2xl text-red-600">Unavailable</p>
+                        </div>
+                      </div>
                     </div>
                   </div>
                   <div v-else-if="loadingExtras" class="flex gap-2">
@@ -189,7 +239,7 @@
                 <Divider />
                 <div class="flex flex-col sm:flex-row sm:gap-12 sm:items-center gap-4 pt-4">
                   <div class="flex items-center gap-2">
-                    <label for="quantity" class="text-gray-700 font-medium">Quantity:</label>
+                    <label for="quantity" class="text-gray-700 font-medium text-sm sm:text-base">Quantity:</label>
                     <InputNumber
                       id="quantity"
                       v-model.number="rawQuantity"
@@ -199,23 +249,25 @@
                       decrementButtonClass="p-button-text"
                       incrementButtonClass="p-button-text"
                       :disabled="!selectedVariant || maxAddable <= 0"
-                      class="w-28"
-                      :inputStyle="{ width: '60px' }"
+                      class="w-24 sm:w-28"
+                      :inputStyle="{ width: '50px', fontSize: '14px' }"
                     />
                   </div>
-                  <Button
-                    label="Add to Cart"
-                    :disabled="!selectedVariant || selectedVariant.stock === 0 || maxAddable <= 0"
-                    class="w-full sm:w-auto px-6 py-3 rounded-full text-lg font-medium p-button-warning"
-                    @click="addToCart"
-                  />
-                  <Button
-                    label="Buy Now"
-                    v-if="selectedVariant && selectedVariant.stock > 0"
-                    :disabled="!selectedVariant || maxAddable <= 0"
-                    class="w-full sm:w-auto px-6 py-3 rounded-full text-lg font-medium p-button-success"
-                    @click="buyNow"
-                  />
+                  <div class="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+                    <Button
+                      label="Add to Cart"
+                      :disabled="!selectedVariant || selectedVariant.stock === 0 || maxAddable <= 0"
+                      class="w-full sm:w-auto px-4 sm:px-6 py-3 rounded-full text-base sm:text-lg font-medium p-button-warning"
+                      @click="addToCart"
+                    />
+                    <Button
+                      label="Buy Now"
+                      v-if="selectedVariant && selectedVariant.stock > 0"
+                      :disabled="!selectedVariant || maxAddable <= 0"
+                      class="w-full sm:w-auto px-4 sm:px-6 py-3 rounded-full text-base sm:text-lg font-medium p-button-success"
+                      @click="buyNow"
+                    />
+                  </div>
                 </div>
               </div>
             </Transition>
@@ -235,7 +287,6 @@ import 'vue3-toastify/dist/index.css'
 
 import Card from 'primevue/card'
 import Divider from 'primevue/divider'
-import Tag from 'primevue/tag'
 import Button from 'primevue/button'
 import InputNumber from 'primevue/inputnumber'
 const transitionDirection = ref('') // 'left' or 'right'
@@ -373,8 +424,19 @@ function addToCart() {
   }
 
   const qty = rawQuantity.value
-  if (qty < 1 || qty > selectedVariant.value.stock || qty > maxAddable.value) {
-    toast.error(`Invalid quantity.`)
+  if (qty < 1) {
+    toast.error('Quantity must be at least 1.')
+    return
+  }
+  
+  if (qty > selectedVariant.value.stock) {
+    toast.error(`Only ${selectedVariant.value.stock} units available in stock for size ${selectedVariant.value.size}.`)
+    return
+  }
+  
+  if (qty > maxAddable.value) {
+    const alreadyInCart = cartStore.items.find(i => i.variantId === selectedVariant.value.id)?.quantity || 0
+    toast.error(`You can only add ${maxAddable.value} more units. You already have ${alreadyInCart} in your cart.`)
     return
   }
 
@@ -395,8 +457,25 @@ function addToCart() {
 }
 
 function buyNow() {
-  if (!selectedVariant.value || rawQuantity.value > maxAddable.value) {
-    toast.warning('Invalid quantity or size.')
+  if (!selectedVariant.value) {
+    toast.warning('Please select a size.')
+    return
+  }
+  
+  const qty = rawQuantity.value
+  if (qty < 1) {
+    toast.error('Quantity must be at least 1.')
+    return
+  }
+  
+  if (qty > selectedVariant.value.stock) {
+    toast.error(`Only ${selectedVariant.value.stock} units available in stock for size ${selectedVariant.value.size}.`)
+    return
+  }
+  
+  if (qty > maxAddable.value) {
+    const alreadyInCart = cartStore.items.find(i => i.variantId === selectedVariant.value.id)?.quantity || 0
+    toast.error(`You can only add ${maxAddable.value} more units. You already have ${alreadyInCart} in your cart.`)
     return
   }
 

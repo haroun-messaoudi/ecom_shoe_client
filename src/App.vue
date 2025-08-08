@@ -2,6 +2,24 @@
 import { RouterView } from 'vue-router'
 import NavBar from './components/NavBar.vue'
 import ToastContainer from 'vue3-toastify'
+import { onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
+
+onMounted(() => {
+  console.log('App.vue mounted')
+  
+  // Add navigation debugging
+  router.beforeEach((to, from, next) => {
+    console.log('Navigation from:', from.path, 'to:', to.path)
+    next()
+  })
+  
+  router.afterEach((to) => {
+    console.log('Navigation completed to:', to.path)
+  })
+})
 </script>
 
 <template>
@@ -9,13 +27,9 @@ import ToastContainer from 'vue3-toastify'
     <ToastContainer />
     <NavBar />
 
-    <!-- Wrap the view in KeepAlive selectively -->
+    <!-- Router view without transition to test navigation -->
     <RouterView v-slot="{ Component, route }">
-      <transition name="fade" mode="out-in" appear>
-        <KeepAlive include="home">
-          <component :is="Component" :key="route.fullPath" />
-        </KeepAlive>
-      </transition>
+      <component :is="Component" :key="route.fullPath" />
     </RouterView>
   </div>
 </template>
