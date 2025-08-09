@@ -14,6 +14,13 @@ export const useSearchStore = defineStore('search', {
     loading: false,
     error: null,
     categoriesLoaded: false,
+    
+    // New filter state
+    filters: {
+      ordering: null,
+      price_min: null,
+      price_max: null,
+    }
   }),
 
   actions: {
@@ -50,6 +57,19 @@ export const useSearchStore = defineStore('search', {
       }
     },
 
+    // New filter actions
+    setFilters(filters) {
+      this.filters = { ...this.filters, ...filters }
+    },
+
+    clearFilters() {
+      this.filters = {
+        ordering: null,
+        price_min: null,
+        price_max: null,
+      }
+    },
+
     async searchProducts(params = {}) {
       this.loading = true
       this.error = null
@@ -60,8 +80,21 @@ export const useSearchStore = defineStore('search', {
           search: this.searchTerm || undefined,
           page: this.page,
           page_size: 12,
+          // Include filter parameters
+          ordering: this.filters.ordering || undefined,
+          price_min: this.filters.price_min || undefined,
+          price_max: this.filters.price_max || undefined,
           ...params
         }
+
+        // Remove undefined values to clean up the query
+        Object.keys(query).forEach(key => {
+          if (query[key] === undefined || query[key] === '') {
+            delete query[key]
+          }
+        })
+
+        console.log('API Request params:', query) // Debug log
 
         const response = await axios.get('https://ecom-shoe-no8p.onrender.com/api/products/list', {
           params: query,
@@ -77,11 +110,17 @@ export const useSearchStore = defineStore('search', {
         this.count = data.count || this.results.length
         this.next = data.next ?? null
         this.previous = data.previous ?? null
-      } catch {
+      } catch (error) {
+        console.error('API Error:', error) // Better error logging
         this.error = 'Failed to fetch products.'
       } finally {
         this.loading = false
       }
     },
+
+    // Helper method to get active filters count
+    getActiveFiltersCount() {
+      return Object.values(this.filters).filter(value => value !== null && value !== '').length
+    }
   },
 })

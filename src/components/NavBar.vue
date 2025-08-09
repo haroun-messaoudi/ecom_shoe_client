@@ -12,6 +12,9 @@ const cartStore = useCartStore()
 const searchQuery = ref(route.query.search || '')
 const mobileOpen = ref(false)
 
+// Emit event for filter toggle - parent component will handle it
+const emit = defineEmits(['toggle-filters'])
+
 watch(searchQuery, q => {
   searchStore.setSearchTerm(q.trim())
 })
@@ -35,6 +38,14 @@ const navLinks = [
 const cartItemCount = computed(() =>
   cartStore.items.reduce((sum, item) => sum + item.quantity, 0)
 )
+
+// Check if we're on search results page
+const isSearchResultsPage = computed(() => route.name === 'products')
+
+const toggleFilters = () => {
+  console.log('Filter button clicked, emitting toggle-filters event')
+  emit('toggle-filters')
+}
 </script>
 
 <template>
@@ -62,8 +73,18 @@ const cartItemCount = computed(() =>
         />
       </form>
 
-      <!-- Right section: nav links + cart -->
+      <!-- Right section: filter icon (only on search results), nav links + cart -->
       <div class="flex items-center gap-4">
+        <!-- Filter icon - only show on search results page -->
+        <button
+          v-if="isSearchResultsPage"
+          @click="toggleFilters"
+          class="p-2 rounded-full hover:bg-orange-100 transition-colors"
+          title="Filter products"
+        >
+          <i class="pi pi-filter text-orange-500 text-2xl"></i>
+        </button>
+
         <nav class="hidden md:flex items-center gap-4">
           <RouterLink
             v-for="link in navLinks"
@@ -112,9 +133,18 @@ const cartItemCount = computed(() =>
           >
             {{ link.label }}
           </RouterLink>
+
+          <!-- Mobile filter button -->
+          <button
+            v-if="isSearchResultsPage"
+            @click="toggleFilters(); mobileOpen = false"
+            class="py-3 text-gray-800 font-medium hover:text-orange-500 transition text-left"
+          >
+            <i class="pi pi-filter mr-2"></i>
+            Filter Products
+          </button>
         </nav>
       </div>
-
     </transition>
   </header>
 
